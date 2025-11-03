@@ -6,7 +6,7 @@ export default function PropertiesPanel() {
   const {
     selectedId,
     layers,
-    updateSelected,
+    updateLayer,
     deleteSelected,
     bringForward,
     sendBackward,
@@ -30,7 +30,7 @@ export default function PropertiesPanel() {
             Text:
             <input
               value={layer.text}
-              onChange={(e) => updateSelected({ text: e.target.value })}
+              onChange={(e) => updateLayer(layer.id, { text: e.target.value })}
               style={{ width: '100%', marginTop: 4 }}
             />
           </label>
@@ -40,22 +40,48 @@ export default function PropertiesPanel() {
             <input
               type="number"
               value={layer.fontSize}
-              onChange={(e) => updateSelected({ fontSize: parseInt(e.target.value) || 12 })}
+              onChange={(e) => updateLayer(layer.id, { fontSize: parseInt(e.target.value) || 12 })}
               style={{ width: '100%', marginTop: 4 }}
             />
           </label>
         </>
       )}
 
-      <label>
-        Color:
-        <input
-          type="color"
-          value={layer.fill || '#000000'}
-          onChange={(e) => updateSelected({ fill: e.target.value })}
-          style={{ width: '100%', marginTop: 4 }}
-        />
-      </label>
+      {(layer.type === 'rect' || layer.type === 'image') && (
+        <>
+          <label>
+            Width:
+            <input
+              type="number"
+              value={layer.width}
+              onChange={(e) => updateLayer(layer.id, { width: parseInt(e.target.value) || 10 })}
+              style={{ width: '100%', marginTop: 4 }}
+            />
+          </label>
+
+          <label>
+            Height:
+            <input
+              type="number"
+              value={layer.height}
+              onChange={(e) => updateLayer(layer.id, { height: parseInt(e.target.value) || 10 })}
+              style={{ width: '100%', marginTop: 4 }}
+            />
+          </label>
+        </>
+      )}
+
+      {(layer.type === 'text' || layer.type === 'rect') && (
+        <label>
+          Color:
+          <input
+            type="color"
+            value={layer.fill || '#000000'}
+            onChange={(e) => updateLayer(layer.id, { fill: e.target.value })}
+            style={{ width: '100%', marginTop: 4 }}
+          />
+        </label>
+      )}
 
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={sendBackward}>⬇ Send Backward</button>

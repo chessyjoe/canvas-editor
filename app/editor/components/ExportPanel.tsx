@@ -28,7 +28,7 @@ export default function ExportPanel() {
         h: (height / 96) * 1.0,
       });
 
-    pptx.writeFile('design.pptx');
+    pptx.writeFile({ fileName: 'design.pptx' });
   };
 
   return (
