@@ -10,6 +10,7 @@ export interface BaseLayer {
   x: number;
   y: number;
   locked?: boolean;
+  visible?: boolean;
 }
 
 export interface TextLayer extends BaseLayer {
@@ -45,7 +46,6 @@ export interface EditorState {
 
   // Selection & manipulation
   setSelected: (id: string | null) => void;
-  updateSelected: (changes: Partial<Layer>) => void;
   deleteSelected: () => void;
   bringForward: () => void;
   sendBackward: () => void;
@@ -58,6 +58,7 @@ export interface EditorState {
   lockLayer: (id: string) => void;
   unlockLayer: (id: string) => void;
   isLocked: (id: string) => boolean;
+  toggleVisibility: (id: string) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -67,15 +68,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   layers: [],
   selectedId: null,
 
-  setSelected: (id) => set({ selectedId: id }),
-
-  updateSelected: (changes) => {
-    const id = get().selectedId;
-    if (!id) return;
-    set((state) => ({
-      layers: state.layers.map((l) => (l.id === id ? { ...l, ...changes } : l)),
-    }));
-  },
+  setSelected: (id: string | null) => set({ selectedId: id }),
 
   deleteSelected: () => {
     const id = get().selectedId;
@@ -126,6 +119,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           fontFamily: 'Arial',
           fill: '#000000',
           locked: false,
+          visible: true,
         } as TextLayer,
       ],
     })),
@@ -143,11 +137,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           height: 80,
           fill: '#007bff',
           locked: false,
+          visible: true,
         } as RectLayer,
       ],
     })),
 
-  addImage: (src) =>
+  addImage: (src: string) =>
     set((state) => ({
       layers: [
         ...state.layers,
@@ -160,27 +155,33 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           height: 200,
           src,
           locked: false,
+          visible: true,
         } as ImageLayer,
       ],
     })),
 
-  updateLayer: (id, changes) =>
-    set((state) => ({
-      layers: state.layers.map((l) => (l.id === id ? { ...l, ...changes } : l)),
-    })),
+  updateLayer: (id: string, changes: Partial<Layer>) => {
+    const layers = get().layers.map((l) => (l.id === id ? { ...l, ...changes } : l));
+    set({ layers: layers as Layer[] });
+  },
 
-  lockLayer: (id) =>
+  lockLayer: (id: string) =>
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, locked: true } : l)),
     })),
 
-  unlockLayer: (id) =>
+  unlockLayer: (id: string) =>
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, locked: false } : l)),
     })),
 
-  isLocked: (id) => {
+  isLocked: (id: string) => {
     const layer = get().layers.find((l) => l.id === id);
     return !!layer?.locked;
   },
+
+  toggleVisibility: (id: string) =>
+    set((state) => ({
+      layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
+    })),
 }));

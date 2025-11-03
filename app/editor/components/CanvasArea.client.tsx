@@ -102,6 +102,7 @@ export default function CanvasArea() {
         <Layer>
           <Rect x={0} y={0} width={width} height={height} fill={background} listening={false} />
           {layers.map((layer) => {
+            if (!layer.visible) return null;
             if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer} />;
             if (layer.type === 'text') return <KonvaText key={layer.id} layer={layer} />;
             if (layer.type === 'rect')
