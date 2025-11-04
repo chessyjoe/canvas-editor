@@ -2,6 +2,10 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
+// The state is designed to be serializable.
+// This means it can be easily saved to JSON and restored later.
+// All properties are primitive types or plain objects.
+
 export type LayerType = 'text' | 'image' | 'rect';
 
 export interface BaseLayer {
@@ -70,6 +74,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setSelected: (id: string | null) => set({ selectedId: id }),
 
+  // Note: We use `get()` inside actions to access the latest state
+  // without subscribing to changes. This is a performance optimization
+  // that prevents components from re-rendering unnecessarily when they
+  // call these actions.
   deleteSelected: () => {
     const id = get().selectedId;
     if (!id) return;
@@ -165,7 +173,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ layers: layers as Layer[] });
   },
 
-  lockLayer: (id: string) =>
+  lockLayer: (id:string) =>
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, locked: true } : l)),
     })),

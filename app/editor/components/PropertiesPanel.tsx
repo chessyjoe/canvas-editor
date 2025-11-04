@@ -1,6 +1,9 @@
 'use client';
 import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function PropertiesPanel() {
   const {
@@ -15,85 +18,85 @@ export default function PropertiesPanel() {
 
   if (!layer)
     return (
-      <div style={{ padding: 16, color: '#888' }}>
+      <div className="p-4 text-gray-500">
         <p>No selection</p>
       </div>
     );
 
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <h3 style={{ marginBottom: 6 }}>Properties</h3>
+    <div className="p-4 flex flex-col gap-4">
+      <h3 className="mb-2">Properties</h3>
 
       {layer.type === 'text' && (
         <>
-          <label>
-            Text:
-            <input
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="text">Text</Label>
+            <Input
+              id="text"
               value={layer.text}
               onChange={(e) => updateLayer(layer.id, { text: e.target.value })}
-              style={{ width: '100%', marginTop: 4 }}
             />
-          </label>
+          </div>
 
-          <label>
-            Font Size:
-            <input
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="fontSize">Font Size</Label>
+            <Input
+              id="fontSize"
               type="number"
               value={layer.fontSize}
               onChange={(e) => updateLayer(layer.id, { fontSize: parseInt(e.target.value) || 12 })}
-              style={{ width: '100%', marginTop: 4 }}
             />
-          </label>
+          </div>
         </>
       )}
 
       {(layer.type === 'rect' || layer.type === 'image') && (
         <>
-          <label>
-            Width:
-            <input
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="width">Width</Label>
+            <Input
+              id="width"
               type="number"
               value={layer.width}
               onChange={(e) => updateLayer(layer.id, { width: parseInt(e.target.value) || 10 })}
-              style={{ width: '100%', marginTop: 4 }}
             />
-          </label>
+          </div>
 
-          <label>
-            Height:
-            <input
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="height">Height</Label>
+            <Input
+              id="height"
               type="number"
               value={layer.height}
               onChange={(e) => updateLayer(layer.id, { height: parseInt(e.target.value) || 10 })}
-              style={{ width: '100%', marginTop: 4 }}
             />
-          </label>
+          </div>
         </>
       )}
 
       {(layer.type === 'text' || layer.type === 'rect') && (
-        <label>
-          Color:
-          <input
+        <div className="grid w-full max-w-sm items-center gap-1.5">
+          <Label htmlFor="color">Color</Label>
+          <Input
+            id="color"
             type="color"
             value={layer.fill || '#000000'}
             onChange={(e) => updateLayer(layer.id, { fill: e.target.value })}
-            style={{ width: '100%', marginTop: 4 }}
           />
-        </label>
+        </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={sendBackward}>⬇ Send Backward</button>
-        <button onClick={bringForward}>⬆ Bring Forward</button>
+      <div className="flex gap-2">
+        <Button onClick={sendBackward}>⬇ Send Backward</Button>
+        <Button onClick={bringForward}>⬆ Bring Forward</Button>
       </div>
 
-      <button
+      <Button
+        variant="destructive"
         onClick={deleteSelected}
-        style={{ background: '#ff5555', color: '#fff', padding: 8, border: 'none', marginTop: 10 }}
       >
         Delete
-      </button>
+      </Button>
     </div>
   );
 }

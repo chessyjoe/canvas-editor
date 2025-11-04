@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
+import { Button } from '@/components/ui/button';
 
 export default function LayersPanel() {
   const { layers, selectedId, setSelected, toggleVisibility, lockLayer, unlockLayer } = useEditorStore();
@@ -19,15 +20,19 @@ export default function LayersPanel() {
           >
             <span>{layer.type}</span>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleVisibility(layer.id);
                 }}
               >
                 {layer.visible ? '👁️' : '🙈'}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (layer.locked) {
@@ -38,7 +43,7 @@ export default function LayersPanel() {
                 }}
               >
                 {layer.locked ? '🔒' : '🔓'}
-              </button>
+              </Button>
             </div>
           </li>
         ))}

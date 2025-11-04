@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
+import { Button } from '@/components/ui/button';
 
 export default function CanvasToolbar() {
   const addText = useEditorStore((s) => s.addText);
@@ -10,9 +11,9 @@ export default function CanvasToolbar() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
-      <button onClick={addText}>Add Text</button>
-      <button onClick={addRect}>Add Rectangle</button>
-      <button onClick={() => fileRef.current?.click()}>Upload Image</button>
+      <Button onClick={addText}>Add Text</Button>
+      <Button onClick={addRect}>Add Rectangle</Button>
+      <Button onClick={() => fileRef.current?.click()}>Upload Image</Button>
       <input
         ref={fileRef}
         type="file"
