@@ -1,9 +1,9 @@
 'use client';
 import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/app/editor/components/ui/button';
+import { Input } from '@/app/editor/components/ui/input';
+import { Label } from '@/app/editor/components/ui/label';
 
 export default function PropertiesPanel() {
   const {

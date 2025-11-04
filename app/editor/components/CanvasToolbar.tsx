@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/editor/components/ui/button';
 
 export default function CanvasToolbar() {
   const addText = useEditorStore((s) => s.addText);
