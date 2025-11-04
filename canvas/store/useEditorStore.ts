@@ -13,6 +13,9 @@ export interface BaseLayer {
   type: LayerType;
   x: number;
   y: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
   locked?: boolean;
   visible?: boolean;
 }
@@ -63,7 +66,6 @@ export interface EditorState {
   unlockLayer: (id: string) => void;
   isLocked: (id: string) => boolean;
   toggleVisibility: (id: string) => void;
-  moveLayer: (from: number, to: number) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -127,6 +129,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           fontSize: 24,
           fontFamily: 'Arial',
           fill: '#000000',
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
           locked: false,
           visible: true,
         } as TextLayer,
@@ -145,6 +150,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           width: 100,
           height: 80,
           fill: '#007bff',
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
           locked: false,
           visible: true,
         } as RectLayer,
@@ -163,6 +171,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           width: 200,
           height: 200,
           src,
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
           locked: false,
           visible: true,
         } as ImageLayer,
@@ -193,12 +204,4 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
     })),
-  moveLayer: (from: number, to: number) => {
-    set((state) => {
-      const layers = [...state.layers];
-      const [moved] = layers.splice(from, 1);
-      layers.splice(to, 0, moved);
-      return { layers };
-    });
-  },
 }));

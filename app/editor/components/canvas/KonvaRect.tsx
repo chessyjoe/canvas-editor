@@ -1,24 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Text as KText } from 'react-konva';
+import { Rect as KRect } from 'react-konva';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import { TextLayer } from '@/canvas/store/useEditorStore';
+import { RectLayer } from '@/canvas/store/useEditorStore';
 
-export function KonvaText({ layer }: { layer: TextLayer }) {
+export function KonvaRect({ layer }: { layer: RectLayer }) {
   const { updateLayer, setSelected } = useEditorStore.getState();
 
   return (
-    <KText
+    <KRect
       id={layer.id}
-      text={layer.text}
       x={layer.x}
       y={layer.y}
+      width={layer.width}
+      height={layer.height}
       rotation={layer.rotation}
       scaleX={layer.scaleX}
       scaleY={layer.scaleY}
-      fontSize={layer.fontSize}
-      fontFamily={layer.fontFamily}
       fill={layer.fill}
       draggable={!layer.locked}
       opacity={layer.visible === false ? 0 : layer.locked ? 0.5 : 1}
