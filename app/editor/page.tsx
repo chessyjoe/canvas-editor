@@ -1,16 +1,18 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import CanvasToolbar from './components/CanvasToolbar';
 import CanvasArea from './components/CanvasArea';
 import PropertiesPanel from './components/PropertiesPanel';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import LayersPanel from './components/LayersPanel';
 import ExportPanel from './components/ExportPanel';
+import ResponsiveToolbar from './components/ResponsiveToolbar';
 
 export default function EditorPage() {
   const { layers, width, height, background } = useEditorStore();
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
 
   const saveState = () => {
     const state = { layers, width, height, background };
@@ -30,32 +32,39 @@ export default function EditorPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
       {/* 🔝 Top Header */}
-      <header className="h-14 border-b border-gray-300 bg-white flex items-center justify-between px-4 text-gray-800">
-        <div className="font-semibold text-lg flex items-center gap-2">
-          🎨 <span>Canvas Editor</span>
+      <header className="h-14 border-b border-gray-300 bg-white flex items-center justify-between px-4 text-gray-800 shrink-0">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)} className="p-1.5 rounded hover:bg-gray-200 md:hidden">
+            ☰
+          </button>
+          <div className="font-semibold text-lg flex items-center gap-2">
+            🎨 <span>Canvas Editor</span>
+          </div>
         </div>
 
         <div className="flex gap-2">
           <button onClick={saveState} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Save</button>
           <button onClick={() => setShowExportPanel(!showExportPanel)} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Export</button>
+          <button onClick={() => setIsRightPanelOpen(!isRightPanelOpen)} className="p-1.5 rounded hover:bg-gray-200 md:hidden">
+            ⚙️
+          </button>
         </div>
       </header>
 
       {/* 🧱 Main Layout */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Left Toolbar */}
-        <aside className="w-60 border-r border-gray-300 bg-white flex flex-col">
-          <CanvasToolbar />
-          <LayersPanel />
-        </aside>
+        <div className={`absolute top-0 left-0 h-full z-10 md:relative md:flex ${isLeftPanelOpen ? 'block' : 'hidden'}`}>
+          <ResponsiveToolbar isOpen={isLeftPanelOpen} />
+        </div>
 
         {/* Canvas Area */}
-        <main className="flex-1 flex justify-center items-center bg-gray-100">
+        <main className="flex-1 flex justify-center items-center bg-gray-100 overflow-auto">
           <CanvasArea />
         </main>
 
         {/* Right Properties Panel */}
-        <aside className="w-64 border-l border-gray-300 bg-white flex flex-col">
+        <aside className={`absolute top-0 right-0 h-full z-10 border-l border-gray-300 bg-white flex-col ${isRightPanelOpen ? 'flex' : 'hidden'} md:relative md:flex w-64 shrink-0`}>
           {showExportPanel ? <ExportPanel /> : <PropertiesPanel />}
         </aside>
       </div>
