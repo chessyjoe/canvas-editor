@@ -63,6 +63,7 @@ export interface EditorState {
   unlockLayer: (id: string) => void;
   isLocked: (id: string) => boolean;
   toggleVisibility: (id: string) => void;
+  moveLayer: (from: number, to: number) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -192,4 +193,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
     })),
+  moveLayer: (from: number, to: number) => {
+    set((state) => {
+      const layers = [...state.layers];
+      const [moved] = layers.splice(from, 1);
+      layers.splice(to, 0, moved);
+      return { layers };
+    });
+  },
 }));
