@@ -50,12 +50,18 @@ export interface EditorState {
   background: string;
   layers: Layer[];
   selectedId: string | null;
+  clipboard: Layer | null;
+  isPropertiesPanelOpen: boolean;
 
   // Selection & manipulation
   setSelected: (id: string | null) => void;
   deleteSelected: () => void;
   bringForward: () => void;
   sendBackward: () => void;
+  copyLayer: () => void;
+  pasteLayer: () => void;
+  duplicateLayer: () => void;
+  openProperties: () => void;
 
   // Layer management
   addText: () => void;
@@ -74,6 +80,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   background: '#ffffff',
   layers: [],
   selectedId: null,
+  clipboard: null,
+  isPropertiesPanelOpen: true,
 
   setSelected: (id: string | null) => set({ selectedId: id }),
 
@@ -129,9 +137,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           fontSize: 24,
           fontFamily: 'Arial',
           fill: '#000000',
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
           locked: false,
           visible: true,
         } as TextLayer,
@@ -150,9 +155,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           width: 100,
           height: 80,
           fill: '#007bff',
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
           locked: false,
           visible: true,
         } as RectLayer,
@@ -171,9 +173,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           width: 200,
           height: 200,
           src,
-          rotation: 0,
-          scaleX: 1,
-          scaleY: 1,
           locked: false,
           visible: true,
         } as ImageLayer,
@@ -204,4 +203,43 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => ({
       layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
     })),
+
+  copyLayer: () => {
+    const { layers, selectedId } = get();
+    const layer = layers.find((l) => l.id === selectedId);
+    if (layer) set({ clipboard: layer });
+  },
+
+  pasteLayer: () => {
+    const { clipboard } = get();
+    if (!clipboard) return;
+    const newLayer = {
+      ...clipboard,
+      id: uuidv4(),
+      x: clipboard.x + 10,
+      y: clipboard.y + 10,
+    };
+    set((state) => ({
+      layers: [...state.layers, newLayer],
+      selectedId: newLayer.id,
+    }));
+  },
+
+  duplicateLayer: () => {
+    const { layers, selectedId } = get();
+    const layer = layers.find((l) => l.id === selectedId);
+    if (!layer) return;
+    const newLayer = {
+      ...layer,
+      id: uuidv4(),
+      x: layer.x + 10,
+      y: layer.y + 10,
+    };
+    set((state) => ({
+      layers: [...state.layers, newLayer],
+      selectedId: newLayer.id,
+    }));
+  },
+
+  openProperties: () => set({ isPropertiesPanelOpen: true }),
 }));

@@ -8,7 +8,7 @@ import LayersPanel from './components/LayersPanel';
 import ExportPanel from './components/ExportPanel';
 
 export default function EditorPage() {
-  const { layers, width, height, background } = useEditorStore();
+  const { layers, width, height, background, isPropertiesPanelOpen, openProperties } = useEditorStore();
   const [showExportPanel, setShowExportPanel] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
 
@@ -38,6 +38,7 @@ export default function EditorPage() {
         <div className="flex gap-2">
           <button onClick={saveState} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Save</button>
           <button onClick={() => setShowExportPanel(!showExportPanel)} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Export</button>
+          <button onClick={openProperties} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Properties</button>
         </div>
       </header>
 
@@ -55,9 +56,11 @@ export default function EditorPage() {
         </main>
 
         {/* Right Properties Panel */}
-        <aside className="w-64 border-l border-gray-300 bg-white flex flex-col">
-          {showExportPanel ? <ExportPanel /> : <PropertiesPanel />}
-        </aside>
+        {isPropertiesPanelOpen && (
+          <aside className="w-64 border-l border-gray-300 bg-white flex flex-col">
+            {showExportPanel ? <ExportPanel /> : <PropertiesPanel />}
+          </aside>
+        )}
       </div>
 
       {showNotification && (

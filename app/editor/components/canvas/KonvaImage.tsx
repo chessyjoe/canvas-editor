@@ -24,10 +24,24 @@ export function KonvaImage({ layer }: { layer: ImageLayer }) {
       scaleX={layer.scaleX}
       scaleY={layer.scaleY}
       draggable={!layer.locked}
-      opacity={layer.visible === false ? 0 : layer.locked ? 0.5 : 1}
+      opacity={layer.locked ? 0.5 : 1}
       onClick={() => setSelected(layer.id)}
       onTap={() => setSelected(layer.id)}
       onDragEnd={(e) => updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })}
+      onTransformEnd={(e) => {
+        const node = e.target;
+        updateLayer(layer.id, {
+          x: node.x(),
+          y: node.y(),
+          rotation: node.rotation(),
+          scaleX: node.scaleX(),
+          scaleY: node.scaleY(),
+        });
+      }}
+      onContextMenu={(e) => {
+        e.evt.preventDefault();
+        setSelected(layer.id);
+      }}
     />
   );
 }

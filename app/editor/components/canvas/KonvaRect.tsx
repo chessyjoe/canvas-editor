@@ -24,6 +24,20 @@ export function KonvaRect({ layer }: { layer: RectLayer }) {
       onClick={() => setSelected(layer.id)}
       onTap={() => setSelected(layer.id)}
       onDragEnd={(e) => updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })}
+      onTransformEnd={(e) => {
+        const node = e.target;
+        updateLayer(layer.id, {
+          x: node.x(),
+          y: node.y(),
+          rotation: node.rotation(),
+          scaleX: node.scaleX(),
+          scaleY: node.scaleY(),
+        });
+      }}
+      onContextMenu={(e) => {
+        e.evt.preventDefault();
+        setSelected(layer.id);
+      }}
     />
   );
 }
