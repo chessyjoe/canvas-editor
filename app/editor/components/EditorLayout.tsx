@@ -28,19 +28,21 @@ interface EditorLayoutProps {
 }
 
 const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
+  const renderTile = (id: ViewId, path: any) => (
+    <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
+      {id === 'layers' && <LayersPanel />}
+      {id === 'properties' && <PropertiesPanel />}
+      {id === 'canvas' && <CanvasArea />}
+      {id === 'ai' && <AIAssistantPanel />}
+      {id === 'templates' && <TemplateSelectorPanel />}
+      {id === 'toolbar' && <CanvasToolbar />}
+      {id === 'export' && <ExportPanel />}
+    </MosaicWindow>
+  );
+
   return (
     <Mosaic<ViewId>
-      renderTile={(id, path) => (
-        <MosaicWindow<ViewId> path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
-          {id === 'layers' && <LayersPanel />}
-          {id === 'properties' && <PropertiesPanel />}
-          {id === 'canvas' && <CanvasArea />}
-          {id === 'ai' && <AIAssistantPanel />}
-          {id === 'templates' && <TemplateSelectorPanel />}
-          {id === 'toolbar' && <CanvasToolbar />}
-          {id === 'export' && <ExportPanel />}
-        </MosaicWindow>
-      )}
+      renderTile={renderTile}
       value={currentNode}
       onChange={setCurrentNode}
     />
