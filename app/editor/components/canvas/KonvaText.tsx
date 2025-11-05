@@ -14,9 +14,6 @@ export function KonvaText({ layer }: { layer: TextLayer }) {
       text={layer.text}
       x={layer.x}
       y={layer.y}
-      rotation={layer.rotation}
-      scaleX={layer.scaleX}
-      scaleY={layer.scaleY}
       fontSize={layer.fontSize}
       fontFamily={layer.fontFamily}
       fill={layer.fill}
@@ -25,20 +22,6 @@ export function KonvaText({ layer }: { layer: TextLayer }) {
       onClick={() => setSelected(layer.id)}
       onTap={() => setSelected(layer.id)}
       onDragEnd={(e) => updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })}
-      onTransformEnd={(e) => {
-        const node = e.target;
-        updateLayer(layer.id, {
-          x: node.x(),
-          y: node.y(),
-          rotation: node.rotation(),
-          scaleX: node.scaleX(),
-          scaleY: node.scaleY(),
-        });
-      }}
-      onContextMenu={(e) => {
-        e.evt.preventDefault();
-        setSelected(layer.id);
-      }}
     />
   );
 }

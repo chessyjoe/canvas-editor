@@ -1,9 +1,10 @@
 'use client';
 import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import { Button } from '@/app/editor/components/ui/button';
-import { Input } from '@/app/editor/components/ui/input';
-import { Label } from '@/app/editor/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PropertiesPanel() {
   const {
@@ -18,17 +19,24 @@ export default function PropertiesPanel() {
 
   if (!layer)
     return (
-      <div className="p-4 text-gray-500">
-        <p>No selection</p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Properties</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-500">No selection</p>
+        </CardContent>
+      </Card>
     );
 
   return (
-    <div className="p-4 flex flex-col gap-4">
-      <h3 className="mb-2">Properties</h3>
-
-      {layer.type === 'text' && (
-        <>
+    <Card>
+      <CardHeader>
+        <CardTitle>Properties</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {layer.type === 'text' && (
+          <>
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="text">Text</Label>
             <Input
@@ -97,6 +105,7 @@ export default function PropertiesPanel() {
       >
         Delete
       </Button>
-    </div>
+    </CardContent>
+  </Card>
   );
 }

@@ -1,17 +1,21 @@
 'use client';
 import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
-import { Button } from '@/app/editor/components/ui/button';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LayersPanel() {
   const { layers, selectedId, setSelected, toggleVisibility, lockLayer, unlockLayer } = useEditorStore();
 
   return (
-    <div className="p-3">
-      <h3 className="mb-2.5">Layers</h3>
-      <ul className="list-none p-0">
-        {layers.map((layer) => (
-          <li
+    <Card>
+      <CardHeader>
+        <CardTitle>Layers</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="list-none p-0">
+          {layers.map((layer) => (
+            <li
             key={layer.id}
             onClick={() => setSelected(layer.id)}
             className={`p-2 mb-1 border border-gray-300 rounded cursor-pointer flex justify-between items-center ${
@@ -45,9 +49,10 @@ export default function LayersPanel() {
                 {layer.locked ? '🔒' : '🔓'}
               </Button>
             </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
