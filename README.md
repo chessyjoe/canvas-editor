@@ -20,6 +20,18 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Known Issues
+
+### `react-mosaic-component` and React 19 Compatibility
+
+There is a known, non-blocking issue with the `react-mosaic-component` library and its compatibility with React 19. When running the development server, you may see the following warning in the console:
+
+```
+Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release.
+```
+
+This warning originates from within the `react-mosaic-component` library and is due to a deprecated pattern that is no longer supported in React 19. This issue does not affect the functionality of the application, and can be safely ignored.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
