@@ -15,6 +15,7 @@ export interface BaseLayer {
   y: number;
   locked?: boolean;
   visible?: boolean;
+  groupId?: string;
 }
 
 export interface TextLayer extends BaseLayer {
@@ -46,7 +47,7 @@ export interface EditorState {
   height: number;
   background: string;
   layers: Layer[];
-  selectedId: string | null;
+  selectedIds: string[];
 
   // Selection & manipulation
   setSelected: (id: string | null) => void;
@@ -64,6 +65,7 @@ export interface EditorState {
   isLocked: (id: string) => boolean;
   toggleVisibility: (id: string) => void;
   reorderLayers: (oldIndex: number, newIndex: number) => void;
+  applyTemplate: (template: any) => void;
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -71,26 +73,42 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   height: 600,
   background: '#ffffff',
   layers: [],
-  selectedId: null,
+  selectedIds: [],
 
-  setSelected: (id: string | null) => set({ selectedId: id }),
+  setSelected: (id: string | null) => {
+    if (id === null) {
+      set({ selectedIds: [] });
+      return;
+    }
+
+    const { layers } = get();
+    const clickedLayer = layers.find((l) => l.id === id);
+
+    if (clickedLayer?.groupId) {
+      const groupIds = layers.filter((l) => l.groupId === clickedLayer.groupId).map((l) => l.id);
+      set({ selectedIds: groupIds });
+    } else {
+      set({ selectedIds: [id] });
+    }
+  },
 
   // Note: We use `get()` inside actions to access the latest state
   // without subscribing to changes. This is a performance optimization
   // that prevents components from re-rendering unnecessarily when they
   // call these actions.
   deleteSelected: () => {
-    const id = get().selectedId;
-    if (!id) return;
+    const ids = get().selectedIds;
+    if (!ids.length) return;
     set((state) => ({
-      layers: state.layers.filter((l) => l.id !== id),
-      selectedId: null,
+      layers: state.layers.filter((l) => !ids.includes(l.id)),
+      selectedIds: [],
     }));
   },
 
   bringForward: () => {
-    const id = get().selectedId;
-    if (!id) return;
+    const ids = get().selectedIds;
+    if (ids.length !== 1) return;
+    const id = ids[0];
     set((state) => {
       const idx = state.layers.findIndex((l) => l.id === id);
       if (idx === -1 || idx === state.layers.length - 1) return {};
@@ -102,8 +120,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   sendBackward: () => {
-    const id = get().selectedId;
-    if (!id) return;
+    const ids = get().selectedIds;
+    if (ids.length !== 1) return;
+    const id = ids[0];
     set((state) => {
       const idx = state.layers.findIndex((l) => l.id === id);
       if (idx <= 0) return {};
@@ -205,4 +224,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           return { layers };
         });
       },
+
+  applyTemplate: (template: any) => {
+    const groupId = uuidv4();
+    const newLayers = template.layers.map((layer: Omit<Layer, 'id'>) => ({
+      ...layer,
+      id: uuidv4(),
+      groupId,
+    }));
+    set((state) => ({
+      layers: [...state.layers, ...newLayers],
+    }));
+  },
 }));
