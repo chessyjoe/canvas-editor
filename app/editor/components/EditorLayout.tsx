@@ -30,13 +30,15 @@ interface EditorLayoutProps {
 const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
   const renderTile = (id: ViewId, path: any) => (
     <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
-      {id === 'layers' && <LayersPanel />}
-      {id === 'properties' && <PropertiesPanel />}
-      {id === 'canvas' && <CanvasArea />}
-      {id === 'ai' && <AIAssistantPanel />}
-      {id === 'templates' && <TemplateSelectorPanel />}
-      {id === 'toolbar' && <CanvasToolbar />}
-      {id === 'export' && <ExportPanel />}
+      <div className="h-full w-full">
+        {id === 'layers' && <LayersPanel />}
+        {id === 'properties' && <PropertiesPanel />}
+        {id === 'canvas' && <CanvasArea />}
+        {id === 'ai' && <AIAssistantPanel />}
+        {id === 'templates' && <TemplateSelectorPanel />}
+        {id === 'toolbar' && <CanvasToolbar />}
+        {id === 'export' && <ExportPanel />}
+      </div>
     </MosaicWindow>
   );
 
