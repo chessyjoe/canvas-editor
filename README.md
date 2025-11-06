@@ -2,16 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies. Note that this project uses `react-mosaic-component`, which has a peer dependency conflict with React 19. To resolve this, you must use the `--legacy-peer-deps` flag:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
