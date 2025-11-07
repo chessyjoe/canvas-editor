@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MosaicNode } from 'react-mosaic-component';
 import EditorLayout, { ViewId } from './components/EditorLayout';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
@@ -73,10 +73,28 @@ const replaceNode = (
 
 
 export default function EditorPage() {
-  const { layers, width, height, background } = useEditorStore();
+  const { layers, width, height, background, setCanvasContainer } = useEditorStore();
   const [showNotification, setShowNotification] = useState(false);
   const [currentNode, setCurrentNode] = useState<MosaicNode<ViewId> | null>(DEFAULT_LAYOUT);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const layoutRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      if (layoutRef.current) {
+        const { width, height } = layoutRef.current.getBoundingClientRect();
+        setCanvasContainer({ width, height });
+      }
+    });
+
+    if (layoutRef.current) {
+      resizeObserver.observe(layoutRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [setCanvasContainer]);
 
   const saveState = () => {
     const state = { layers, width, height, background };
@@ -124,7 +142,7 @@ export default function EditorPage() {
       </header>
 
       {/* 🧱 Main Layout */}
-      <div className="flex-1">
+      <div className="flex-1" ref={layoutRef}>
         <EditorLayout currentNode={currentNode} setCurrentNode={setCurrentNode} />
       </div>
 

@@ -47,6 +47,14 @@ export interface EditorState {
   background: string;
   layers: Layer[];
   selectedId: string | null;
+  scale: number;
+  stagePos: { x: number; y: number };
+  canvasContainer: { width: number; height: number };
+
+  // Zoom & Pan
+  setZoom: (newZoom: number) => void;
+  setCanvasContainer: (size: { width: number; height: number }) => void;
+  setStagePos: (newPos: { x: number; y: number }) => void;
 
   // Selection & manipulation
   setSelected: (id: string | null) => void;
@@ -72,6 +80,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   background: '#ffffff',
   layers: [],
   selectedId: null,
+  scale: 1,
+  stagePos: { x: 0, y: 0 },
+  canvasContainer: { width: 0, height: 0 },
+
+  setZoom: (newZoom) => set({ scale: newZoom }),
+  setStagePos: (newPos) => set({ stagePos: newPos }),
+  setCanvasContainer: (size) => set({ canvasContainer: size }),
 
   setSelected: (id: string | null) => set({ selectedId: id }),
 
