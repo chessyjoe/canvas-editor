@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // All properties are primitive types or plain objects.
 
 export type LayerType = 'text' | 'image' | 'rect';
+export type SelectionMode = 'box' | 'lasso';
 
 export interface BaseLayer {
   id: string;
@@ -15,6 +16,7 @@ export interface BaseLayer {
   y: number;
   locked?: boolean;
   visible?: boolean;
+  groupId?: string;
 }
 
 export interface TextLayer extends BaseLayer {
@@ -52,7 +54,8 @@ export interface EditorState {
   height: number;
   background: string;
   layers: Layer[];
-  selectedId: string | null;
+  selectedIds: string[];
+  selectionMode: SelectionMode;
   scale: number;
   stagePos: { x: number; y: number };
   canvasContainer: { width: number; height: number };
@@ -63,7 +66,11 @@ export interface EditorState {
   setStagePos: (newPos: { x: number; y: number }) => void;
 
   // Selection & manipulation
-  setSelected: (id: string | null) => void;
+  setSelecteds: (ids: string[]) => void;
+  addToSelection: (id: string) => void;
+  removeFromSelection: (id: string) => void;
+  setSelectionMode: (mode: SelectionMode) => void;
+  selectAll: () => void;
   deleteSelected: () => void;
   bringForward: () => void;
   sendBackward: () => void;
@@ -78,6 +85,8 @@ export interface EditorState {
   isLocked: (id: string) => boolean;
   toggleVisibility: (id: string) => void;
   reorderLayers: (oldIndex: number, newIndex: number) => void;
+  groupSelection: () => void;
+  ungroupSelection: () => void;
 
   // History
   history: HistoryAction[];
@@ -112,7 +121,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
     layers: [],
     history: [],
     historyIndex: -1,
-    selectedId: null,
+    selectedIds: [],
+    selectionMode: 'box',
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
@@ -121,48 +131,65 @@ export const useEditorStore = create<EditorState>((set, get) => {
     setStagePos: (newPos) => set({ stagePos: newPos }),
     setCanvasContainer: (size) => set({ canvasContainer: size }),
 
-    setSelected: (id: string | null) => set({ selectedId: id }),
+    setSelecteds: (ids: string[]) => set({ selectedIds: ids }),
+    addToSelection: (id: string) => set((state) => ({ selectedIds: [...state.selectedIds, id] })),
+    removeFromSelection: (id: string) => set((state) => ({ selectedIds: state.selectedIds.filter((i) => i !== id) })),
+    setSelectionMode: (mode: SelectionMode) => set({ selectionMode: mode }),
+    selectAll: () => set((state) => ({ selectedIds: state.layers.map((l) => l.id) })),
 
     deleteSelected: () => {
-      const id = get().selectedId;
-      if (!id) return;
-      const index = get().layers.findIndex((l) => l.id === id);
-      const layer = get().layers[index];
-      if (layer) {
+      const ids = get().selectedIds;
+      if (ids.length === 0) return;
+
+      const layers = get().layers;
+      const layersToDelete = layers.filter((l) => ids.includes(l.id));
+
+      if (layersToDelete.length === 1) {
+        const layer = layersToDelete[0];
+        const index = layers.findIndex((l) => l.id === layer.id);
         addAction({ type: 'DELETE_LAYER', payload: { layer, index } });
-        set((state) => ({
-          layers: state.layers.filter((l) => l.id !== id),
-          selectedId: null,
-        }));
       }
+
+      set((state) => ({
+        layers: state.layers.filter((l) => !ids.includes(l.id)),
+        selectedIds: [],
+      }));
     },
 
     bringForward: () => {
-      const id = get().selectedId;
-      if (!id) return;
-      const idx = get().layers.findIndex((l) => l.id === id);
-      if (idx === -1 || idx === get().layers.length - 1) return;
-      addAction({ type: 'REORDER_LAYERS', payload: { oldIndex: idx, newIndex: idx + 1 } });
-      set((state) => {
-        const layers = [...state.layers];
-        const [item] = layers.splice(idx, 1);
-        layers.splice(idx + 1, 0, item);
-        return { layers };
+      const { layers, selectedIds } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter(Boolean) as Layer[];
+      if (selectedLayers.length === 0) return;
+
+      const indices = selectedLayers.map((l) => layers.indexOf(l));
+      const maxIndex = Math.max(...indices);
+      if (maxIndex === layers.length - 1) return;
+
+      const newLayers = [...layers];
+      selectedLayers.forEach((layer) => {
+        const index = newLayers.indexOf(layer);
+        newLayers.splice(index, 1);
+        newLayers.splice(index + 1, 0, layer);
       });
+      set({ layers: newLayers });
     },
 
     sendBackward: () => {
-      const id = get().selectedId;
-      if (!id) return;
-      const idx = get().layers.findIndex((l) => l.id === id);
-      if (idx <= 0) return;
-      addAction({ type: 'REORDER_LAYERS', payload: { oldIndex: idx, newIndex: idx - 1 } });
-      set((state) => {
-        const layers = [...state.layers];
-        const [item] = layers.splice(idx, 1);
-        layers.splice(idx - 1, 0, item);
-        return { layers };
+      const { layers, selectedIds } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter(Boolean) as Layer[];
+      if (selectedLayers.length === 0) return;
+
+      const indices = selectedLayers.map((l) => layers.indexOf(l));
+      const minIndex = Math.min(...indices);
+      if (minIndex === 0) return;
+
+      const newLayers = [...layers];
+      selectedLayers.forEach((layer) => {
+        const index = newLayers.indexOf(layer);
+        newLayers.splice(index, 1);
+        newLayers.splice(index - 1, 0, layer);
       });
+      set({ layers: newLayers });
     },
 
     addText: () => {
@@ -286,6 +313,34 @@ export const useEditorStore = create<EditorState>((set, get) => {
         layers.splice(newIndex, 0, movedLayer);
         return { layers };
       });
+    },
+
+    groupSelection: () => {
+      const { selectedIds, layers } = get();
+      if (selectedIds.length < 2) return;
+      const groupId = uuidv4();
+      set((state) => ({
+        layers: state.layers.map((layer) =>
+          selectedIds.includes(layer.id) ? { ...layer, groupId } : layer
+        ),
+      }));
+    },
+
+    ungroupSelection: () => {
+      const { selectedIds, layers } = get();
+      if (selectedIds.length === 0) return;
+      const groupIds = new Set(
+        layers
+          .filter((layer) => selectedIds.includes(layer.id) && layer.groupId)
+          .map((layer) => layer.groupId)
+      );
+      if (groupIds.size === 0) return;
+
+      set((state) => ({
+        layers: state.layers.map((layer) =>
+          layer.groupId && groupIds.has(layer.groupId) ? { ...layer, groupId: undefined } : layer
+        ),
+      }));
     },
 
     undo: () => {

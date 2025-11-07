@@ -5,10 +5,11 @@ import { Image as KImage } from 'react-konva';
 import useImage from 'use-image';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { ImageLayer } from '@/canvas/store/useEditorStore';
+import { KonvaEventObject } from 'konva/lib/Node';
 
-export function KonvaImage({ layer }: { layer: ImageLayer }) {
+export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
   const [img] = useImage(layer.src, 'anonymous');
-  const { updateLayer, setSelected } = useEditorStore.getState();
+  const { updateLayer, setSelecteds } = useEditorStore.getState();
 
   if (!img) return null;
 
@@ -22,9 +23,9 @@ export function KonvaImage({ layer }: { layer: ImageLayer }) {
       height={layer.height}
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
-      onClick={() => setSelected(layer.id)}
-      onTap={() => setSelected(layer.id)}
-      onDragEnd={(e) => updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })}
+      onClick={() => setSelecteds([layer.id])}
+      onTap={() => setSelecteds([layer.id])}
+      onDragEnd={onDragEnd}
       onTransformEnd={(e) => {
         const node: any = e.target;
         const scaleX = node.scaleX();

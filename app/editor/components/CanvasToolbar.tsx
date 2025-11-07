@@ -2,13 +2,31 @@
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
+import { FaMousePointer } from 'react-icons/fa';
 
 export default function CanvasToolbar() {
-  const { undo, redo, history, historyIndex } = useEditorStore();
-  const addText = useEditorStore((s) => s.addText);
-  const addRect = useEditorStore((s) => s.addRect);
-  const addImage = useEditorStore((s) => s.addImage);
-  const { scale, setZoom, setStagePos, width, height, canvasContainer } = useEditorStore();
+  const {
+    undo,
+    redo,
+    history,
+    historyIndex,
+    addText,
+    addRect,
+    addImage,
+    scale,
+    setZoom,
+    setStagePos,
+    width,
+    height,
+    canvasContainer,
+    selectionMode,
+    setSelectionMode,
+    groupSelection,
+    ungroupSelection,
+    selectedIds,
+    selectAll,
+    layers,
+  } = useEditorStore();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const zoom = (factor: number) => {
@@ -43,15 +61,47 @@ export default function CanvasToolbar() {
     setStagePos({ x: newX, y: newY });
   };
 
+  const addTestShapes = () => {
+    addRect();
+    addText();
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <Button
+          onClick={() => setSelectionMode('box')}
+          variant={selectionMode === 'box' ? 'secondary' : 'ghost'}
+          title="Box Selection"
+        >
+          <FaMousePointer />
+        </Button>
+      </div>
       <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
-        <Button onClick={undo} disabled={historyIndex < 0}>Undo</Button>
-        <Button onClick={redo} disabled={historyIndex >= history.length - 1}>Redo</Button>
+        <Button onClick={undo} disabled={historyIndex < 0}>
+          Undo
+        </Button>
+        <Button onClick={redo} disabled={historyIndex >= history.length - 1}>
+          Redo
+        </Button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={groupSelection} disabled={selectedIds.length < 2}>
+          Group
+        </Button>
+        <Button onClick={ungroupSelection} disabled={selectedIds.length === 0}>
+          Ungroup
+        </Button>
       </div>
       <Button onClick={addText}>Add Text</Button>
       <Button onClick={addRect}>Add Rectangle</Button>
       <Button onClick={() => fileRef.current?.click()}>Upload Image</Button>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={addTestShapes}>Add Test Shapes</Button>
+        <Button onClick={selectAll} disabled={layers.length === 0}>
+          Select All
+        </Button>
+      </div>
       <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
         <Button onClick={() => zoom(1.2)}>Zoom In</Button>
         <Button onClick={() => zoom(0.8)}>Zoom Out</Button>
