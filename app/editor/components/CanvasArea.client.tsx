@@ -25,7 +25,7 @@ export default function CanvasArea() {
     setZoom,
     setStagePos,
     canvasContainer,
-    selectionMode,
+    tool,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -65,17 +65,19 @@ export default function CanvasArea() {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    if (e.target !== e.target.getStage()) {
-      const id = e.target.id();
-      if (e.evt.shiftKey) {
-        if (selectedIds.includes(id)) {
-          removeFromSelection(id);
+    if (tool === 'pan' || e.target !== e.target.getStage()) {
+      if (e.target !== e.target.getStage()) {
+        const id = e.target.id();
+        if (e.evt.shiftKey) {
+          if (selectedIds.includes(id)) {
+            removeFromSelection(id);
+          } else {
+            addToSelection(id);
+          }
         } else {
-          addToSelection(id);
-        }
-      } else {
-        if (!selectedIds.includes(id)) {
-          setSelecteds([id]);
+          if (!selectedIds.includes(id)) {
+            setSelecteds([id]);
+          }
         }
       }
       return;
@@ -86,9 +88,7 @@ export default function CanvasArea() {
     const pos = stage.getRelativePointerPosition();
     if (!pos) return;
 
-    if (selectionMode === 'box') {
-      setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
-    }
+    setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
@@ -99,13 +99,11 @@ export default function CanvasArea() {
     const pos = stage.getRelativePointerPosition();
     if (!pos) return;
 
-    if (selectionMode === 'box') {
-      setSelectionRect({
-        ...selectionRect,
-        x2: pos.x,
-        y2: pos.y,
-      });
-    }
+    setSelectionRect({
+      ...selectionRect,
+      x2: pos.x,
+      y2: pos.y,
+    });
   };
 
   const handleMouseUp = () => {
@@ -161,7 +159,7 @@ export default function CanvasArea() {
         width={canvasContainer.width}
         height={canvasContainer.height}
         ref={stageRef}
-        draggable
+        draggable={tool === 'pan'}
         x={stagePos.x}
         y={stagePos.y}
         scaleX={scale}

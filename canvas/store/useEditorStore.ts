@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // All properties are primitive types or plain objects.
 
 export type LayerType = 'text' | 'image' | 'rect';
-export type SelectionMode = 'box' | 'lasso';
+export type Tool = 'select' | 'pan';
 
 export interface BaseLayer {
   id: string;
@@ -55,7 +55,7 @@ export interface EditorState {
   background: string;
   layers: Layer[];
   selectedIds: string[];
-  selectionMode: SelectionMode;
+  tool: Tool;
   scale: number;
   stagePos: { x: number; y: number };
   canvasContainer: { width: number; height: number };
@@ -69,7 +69,7 @@ export interface EditorState {
   setSelecteds: (ids: string[]) => void;
   addToSelection: (id: string) => void;
   removeFromSelection: (id: string) => void;
-  setSelectionMode: (mode: SelectionMode) => void;
+  setTool: (tool: Tool) => void;
   selectAll: () => void;
   deleteSelected: () => void;
   bringForward: () => void;
@@ -122,7 +122,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     history: [],
     historyIndex: -1,
     selectedIds: [],
-    selectionMode: 'box',
+    tool: 'select',
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
@@ -134,7 +134,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
     setSelecteds: (ids: string[]) => set({ selectedIds: ids }),
     addToSelection: (id: string) => set((state) => ({ selectedIds: [...state.selectedIds, id] })),
     removeFromSelection: (id: string) => set((state) => ({ selectedIds: state.selectedIds.filter((i) => i !== id) })),
-    setSelectionMode: (mode: SelectionMode) => set({ selectionMode: mode }),
+    setTool: (tool: Tool) => set({ tool }),
     selectAll: () => set((state) => ({ selectedIds: state.layers.map((l) => l.id) })),
 
     deleteSelected: () => {

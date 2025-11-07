@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
-import { FaMousePointer } from 'react-icons/fa';
+import { FaMousePointer, FaHandPaper, FaDrawPolygon } from 'react-icons/fa';
 
 export default function CanvasToolbar() {
   const {
@@ -19,8 +19,8 @@ export default function CanvasToolbar() {
     width,
     height,
     canvasContainer,
-    selectionMode,
-    setSelectionMode,
+    tool,
+    setTool,
     groupSelection,
     ungroupSelection,
     selectedIds,
@@ -70,11 +70,24 @@ export default function CanvasToolbar() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
       <div style={{ display: 'flex', gap: 4 }}>
         <Button
-          onClick={() => setSelectionMode('box')}
-          variant={selectionMode === 'box' ? 'secondary' : 'ghost'}
+          onClick={() => setTool('select')}
+          variant={tool === 'select' ? 'secondary' : 'ghost'}
           title="Box Selection"
         >
           <FaMousePointer />
+        </Button>
+        <Button
+          onClick={() => setTool('pan')}
+          variant={tool === 'pan' ? 'secondary' : 'ghost'}
+          title="Pan"
+        >
+          <FaHandPaper />
+        </Button>
+        <Button
+          disabled
+          title="Lasso Selection (Coming Soon)"
+        >
+          <FaDrawPolygon />
         </Button>
       </div>
       <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>

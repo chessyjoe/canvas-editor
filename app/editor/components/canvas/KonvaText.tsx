@@ -7,7 +7,6 @@ import { TextLayer } from '@/canvas/store/useEditorStore';
 import { KonvaEventObject } from 'konva/lib/Node';
 
 export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
-  const { setSelecteds } = useEditorStore.getState();
 
   return (
     <KText
@@ -20,8 +19,6 @@ export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (
       fill={layer.fill}
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
-      onClick={() => setSelecteds([layer.id])}
-      onTap={() => setSelecteds([layer.id])}
       onDragEnd={onDragEnd}
     />
   );

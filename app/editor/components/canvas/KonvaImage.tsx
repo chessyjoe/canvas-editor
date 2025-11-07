@@ -9,7 +9,7 @@ import { KonvaEventObject } from 'konva/lib/Node';
 
 export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
   const [img] = useImage(layer.src, 'anonymous');
-  const { updateLayer, setSelecteds } = useEditorStore.getState();
+  const { updateLayer } = useEditorStore.getState();
 
   if (!img) return null;
 
@@ -23,8 +23,6 @@ export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd:
       height={layer.height}
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
-      onClick={() => setSelecteds([layer.id])}
-      onTap={() => setSelecteds([layer.id])}
       onDragEnd={onDragEnd}
       onTransformEnd={(e) => {
         const node: any = e.target;
