@@ -19,41 +19,58 @@ export default function CanvasArea() {
     stagePos,
     setZoom,
     setStagePos,
+    canvasContainer,
   } = useEditorStore();
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
 
   const handleWheel = (e: any) => {
-    if (!e.evt.ctrlKey) return;
     e.evt.preventDefault();
-    const scaleBy = 1.05;
     const stage = stageRef.current;
     if (!stage) return;
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return;
 
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+    if (e.evt.ctrlKey) {
+      // Zooming
+      const scaleBy = 1.05;
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
 
-    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
 
-    setZoom(newScale);
+      const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+      setZoom(newScale);
 
-    const newPos = {
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    };
-    setStagePos(newPos);
+      const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      setStagePos(newPos);
+    } else {
+      // Panning with two-finger scroll
+      const newPos = {
+        x: stage.x() - e.evt.deltaX,
+        y: stage.y() - e.evt.deltaY,
+      };
+      setStagePos(newPos);
+    }
   };
 
   return (
-    <div style={{ border: '1px solid #ddd', background }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background,
+      }}
+    >
       <Stage
-        width={width}
-        height={height}
+        width={canvasContainer.width}
+        height={canvasContainer.height}
         ref={stageRef}
         draggable
         x={stagePos.x}
@@ -67,7 +84,6 @@ export default function CanvasArea() {
         }}
       >
         <Layer>
-          <Rect x={0} y={0} width={width} height={height} fill={background} listening={false} />
           {layers.map((layer) => {
             if (!layer.visible) return null;
             if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer as ImageLayer} />;
