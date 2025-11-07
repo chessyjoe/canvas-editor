@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
+import { Stage, Layer, Rect, Line } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
@@ -30,6 +30,8 @@ export default function CanvasArea() {
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
+  const [lassoPoints, setLassoPoints] = useState<number[]>([]);
+  const [isLassoing, setIsLassoing] = useState(false);
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -65,7 +67,7 @@ export default function CanvasArea() {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    if (tool === 'pan' || e.target !== e.target.getStage()) {
+    if (tool === 'pan' || (tool === 'select' && e.target !== e.target.getStage())) {
       if (e.target !== e.target.getStage()) {
         const id = e.target.id();
         if (e.evt.shiftKey) {
@@ -88,22 +90,25 @@ export default function CanvasArea() {
     const pos = stage.getRelativePointerPosition();
     if (!pos) return;
 
-    setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
+    if (tool === 'select') {
+      setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
+    } else if (tool === 'lasso') {
+      setIsLassoing(true);
+      setLassoPoints([pos.x, pos.y]);
+    }
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
-    if (!selectionRect.visible) return;
-
     const stage = stageRef.current;
     if (!stage) return;
     const pos = stage.getRelativePointerPosition();
     if (!pos) return;
 
-    setSelectionRect({
-      ...selectionRect,
-      x2: pos.x,
-      y2: pos.y,
-    });
+    if (selectionRect.visible) {
+      setSelectionRect({ ...selectionRect, x2: pos.x, y2: pos.y });
+    } else if (isLassoing) {
+      setLassoPoints([...lassoPoints, pos.x, pos.y]);
+    }
   };
 
   const handleMouseUp = () => {
@@ -122,8 +127,41 @@ export default function CanvasArea() {
         return Konva.Util.haveIntersection(box, shapeRect);
       });
       setSelecteds(selected.map((shape) => shape.id()));
+      setSelectionRect({ ...selectionRect, visible: false });
+    } else if (isLassoing) {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const selected = stage.find('#' + layers.map((l) => l.id).join(', #')).filter((shape) => {
+        const shapeRect = shape.getClientRect();
+        const center = {
+          x: shapeRect.x + shapeRect.width / 2,
+          y: shapeRect.y + shapeRect.height / 2,
+        };
+        return isInside(center, lassoPoints);
+      });
+      setSelecteds(selected.map((shape) => shape.id()));
+      setLassoPoints([]);
+      setIsLassoing(false);
     }
-    setSelectionRect({ ...selectionRect, visible: false });
+  };
+
+  const isInside = (point: { x: number; y: number }, polygon: number[]) => {
+    const x = point.x;
+    const y = point.y;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 2; i < polygon.length; j = i, i += 2) {
+      const xi = polygon[i];
+      const yi = polygon[i + 1];
+      const xj = polygon[j];
+      const yj = polygon[j + 1];
+
+      const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      if (intersect) {
+        inside = !inside;
+      }
+    }
+    return inside;
   };
 
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
@@ -201,6 +239,7 @@ export default function CanvasArea() {
               fill="rgba(0, 0, 255, 0.5)"
             />
           )}
+          {isLassoing && <Line points={lassoPoints} stroke="blue" strokeWidth={2} />}
         </Layer>
       </Stage>
     </div>

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // All properties are primitive types or plain objects.
 
 export type LayerType = 'text' | 'image' | 'rect';
-export type Tool = 'select' | 'pan';
+export type Tool = 'select' | 'pan' | 'lasso';
 
 export interface BaseLayer {
   id: string;

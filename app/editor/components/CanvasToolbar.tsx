@@ -84,8 +84,9 @@ export default function CanvasToolbar() {
           <FaHandPaper />
         </Button>
         <Button
-          disabled
-          title="Lasso Selection (Coming Soon)"
+          onClick={() => setTool('lasso')}
+          variant={tool === 'lasso' ? 'secondary' : 'ghost'}
+          title="Lasso Selection"
         >
           <FaDrawPolygon />
         </Button>
