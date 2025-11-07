@@ -4,9 +4,9 @@ import React from 'react';
 import { Text as KText } from 'react-konva';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { TextLayer } from '@/canvas/store/useEditorStore';
+import { KonvaEventObject } from 'konva/lib/Node';
 
-export function KonvaText({ layer }: { layer: TextLayer }) {
-  const { updateLayer, setSelected } = useEditorStore.getState();
+export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
 
   return (
     <KText
@@ -19,9 +19,7 @@ export function KonvaText({ layer }: { layer: TextLayer }) {
       fill={layer.fill}
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
-      onClick={() => setSelected(layer.id)}
-      onTap={() => setSelected(layer.id)}
-      onDragEnd={(e) => updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })}
+      onDragEnd={onDragEnd}
     />
   );
 }

@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
+import Konva from 'konva';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { KonvaImage } from './canvas/KonvaImage';
 import { KonvaText } from './canvas/KonvaText';
 import { TransformerManager } from './canvas/TransformerManager';
-import { ImageLayer, TextLayer } from '@/canvas/store/useEditorStore';
+import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore';
 
 export default function CanvasArea() {
   const {
@@ -14,23 +16,27 @@ export default function CanvasArea() {
     height,
     background,
     layers,
-    setSelected,
+    selectedIds,
+    setSelecteds,
+    addToSelection,
+    removeFromSelection,
     scale,
     stagePos,
     setZoom,
     setStagePos,
     canvasContainer,
+    tool,
   } = useEditorStore();
-  const stageRef = useRef<any>(null);
-  const trRef = useRef<any>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+  const trRef = useRef<Konva.Transformer>(null);
+  const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
 
-  const handleWheel = (e: any) => {
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
     const stage = stageRef.current;
     if (!stage) return;
 
     if (e.evt.ctrlKey) {
-      // Zooming
       const scaleBy = 1.05;
       const oldScale = stage.scaleX();
       const pointer = stage.getPointerPosition();
@@ -50,12 +56,93 @@ export default function CanvasArea() {
       };
       setStagePos(newPos);
     } else {
-      // Panning with two-finger scroll
       const newPos = {
         x: stage.x() - e.evt.deltaX,
         y: stage.y() - e.evt.deltaY,
       };
       setStagePos(newPos);
+    }
+  };
+
+  const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+    if (tool === 'pan' || e.target !== e.target.getStage()) {
+      if (e.target !== e.target.getStage()) {
+        const id = e.target.id();
+        if (e.evt.shiftKey) {
+          if (selectedIds.includes(id)) {
+            removeFromSelection(id);
+          } else {
+            addToSelection(id);
+          }
+        } else {
+          if (!selectedIds.includes(id)) {
+            setSelecteds([id]);
+          }
+        }
+      }
+      return;
+    }
+
+    const stage = stageRef.current;
+    if (!stage) return;
+    const pos = stage.getRelativePointerPosition();
+    if (!pos) return;
+
+    setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
+  };
+
+  const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    if (!selectionRect.visible) return;
+
+    const stage = stageRef.current;
+    if (!stage) return;
+    const pos = stage.getRelativePointerPosition();
+    if (!pos) return;
+
+    setSelectionRect({
+      ...selectionRect,
+      x2: pos.x,
+      y2: pos.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    if (selectionRect.visible) {
+      const stage = stageRef.current;
+      if (!stage) return;
+      const { x1, y1, x2, y2 } = selectionRect;
+      const box = {
+        x: Math.min(x1, x2),
+        y: Math.min(y1, y2),
+        width: Math.abs(x1 - x2),
+        height: Math.abs(y1 - y2),
+      };
+      const selected = stage.find('#' + layers.map((l) => l.id).join(', #')).filter((shape) => {
+        const shapeRect = shape.getClientRect();
+        return Konva.Util.haveIntersection(box, shapeRect);
+      });
+      setSelecteds(selected.map((shape) => shape.id()));
+    }
+    setSelectionRect({ ...selectionRect, visible: false });
+  };
+
+  const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
+    const { updateLayer } = useEditorStore.getState();
+    const id = e.target.id();
+    const layer = layers.find((l) => l.id === id);
+    if (!layer) return;
+
+    const dx = e.target.x() - layer.x;
+    const dy = e.target.y() - layer.y;
+
+    updateLayer(id, { x: e.target.x(), y: e.target.y() });
+
+    if (layer.groupId) {
+      layers.forEach((l) => {
+        if (l.groupId === layer.groupId && l.id !== id) {
+          updateLayer(l.id, { x: l.x + dx, y: l.y + dy });
+        }
+      });
     }
   };
 
@@ -72,22 +159,22 @@ export default function CanvasArea() {
         width={canvasContainer.width}
         height={canvasContainer.height}
         ref={stageRef}
-        draggable
+        draggable={tool === 'pan'}
         x={stagePos.x}
         y={stagePos.y}
         scaleX={scale}
         scaleY={scale}
         onDragEnd={(e) => setStagePos({ x: e.target.x(), y: e.target.y() })}
         onWheel={handleWheel}
-        onMouseDown={(e) => {
-          if (e.target === e.target.getStage()) setSelected(null);
-        }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       >
         <Layer>
           {layers.map((layer) => {
             if (!layer.visible) return null;
-            if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer as ImageLayer} />;
-            if (layer.type === 'text') return <KonvaText key={layer.id} layer={layer as TextLayer} />;
+            if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer as ImageLayer} onDragEnd={handleDragEnd} />;
+            if (layer.type === 'text') return <KonvaText key={layer.id} layer={layer as TextLayer} onDragEnd={handleDragEnd} />;
             if (layer.type === 'rect')
               return (
                 <Rect
@@ -95,19 +182,25 @@ export default function CanvasArea() {
                   id={layer.id}
                   x={layer.x}
                   y={layer.y}
-                  width={layer.width}
-                  height={layer.height}
-                  fill={layer.fill}
+                  width={(layer as RectLayer).width}
+                  height={(layer as RectLayer).height}
+                  fill={(layer as RectLayer).fill}
                   draggable={!layer.locked}
                   opacity={layer.locked ? 0.5 : 1}
-                  onClick={() => setSelected(layer.id)}
-                  onDragEnd={(e) =>
-                    useEditorStore.getState().updateLayer(layer.id, { x: e.target.x(), y: e.target.y() })
-                  }
+                  onDragEnd={handleDragEnd}
                 />
               );
           })}
           <TransformerManager stageRef={stageRef} trRef={trRef} />
+          {selectionRect.visible && (
+            <Rect
+              x={Math.min(selectionRect.x1, selectionRect.x2)}
+              y={Math.min(selectionRect.y1, selectionRect.y2)}
+              width={Math.abs(selectionRect.x1 - selectionRect.x2)}
+              height={Math.abs(selectionRect.y1 - selectionRect.y2)}
+              fill="rgba(0, 0, 255, 0.5)"
+            />
+          )}
         </Layer>
       </Stage>
     </div>
