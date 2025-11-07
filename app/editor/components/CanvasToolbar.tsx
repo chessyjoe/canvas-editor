@@ -4,6 +4,7 @@ import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
 
 export default function CanvasToolbar() {
+  const { undo, redo, history, historyIndex } = useEditorStore();
   const addText = useEditorStore((s) => s.addText);
   const addRect = useEditorStore((s) => s.addRect);
   const addImage = useEditorStore((s) => s.addImage);
@@ -44,6 +45,10 @@ export default function CanvasToolbar() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={undo} disabled={historyIndex < 0}>Undo</Button>
+        <Button onClick={redo} disabled={historyIndex >= history.length - 1}>Redo</Button>
+      </div>
       <Button onClick={addText}>Add Text</Button>
       <Button onClick={addRect}>Add Rectangle</Button>
       <Button onClick={() => fileRef.current?.click()}>Upload Image</Button>

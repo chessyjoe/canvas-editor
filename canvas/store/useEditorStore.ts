@@ -41,6 +41,12 @@ export interface ImageLayer extends BaseLayer {
 
 export type Layer = TextLayer | RectLayer | ImageLayer;
 
+export type HistoryAction =
+  | { type: 'ADD_LAYER'; payload: Layer }
+  | { type: 'DELETE_LAYER'; payload: { layer: Layer; index: number } }
+  | { type: 'UPDATE_LAYER'; payload: { id: string; changes: Partial<Layer>; previousChanges: Partial<Layer> } }
+  | { type: 'REORDER_LAYERS'; payload: { oldIndex: number; newIndex: number } };
+
 export interface EditorState {
   width: number;
   height: number;
@@ -72,152 +78,297 @@ export interface EditorState {
   isLocked: (id: string) => boolean;
   toggleVisibility: (id: string) => void;
   reorderLayers: (oldIndex: number, newIndex: number) => void;
+
+  // History
+  history: HistoryAction[];
+  historyIndex: number;
+  undo: () => void;
+  redo: () => void;
+  setHistoryIndex: (index: number) => void;
 }
 
-export const useEditorStore = create<EditorState>((set, get) => ({
-  width: 800,
-  height: 600,
-  background: '#ffffff',
-  layers: [],
-  selectedId: null,
-  scale: 1,
-  stagePos: { x: 0, y: 0 },
-  canvasContainer: { width: 0, height: 0 },
+const recordAction = (set: any, get: any) => (action: HistoryAction) => {
+  const state = get();
+  const newHistory = state.history.slice(0, state.historyIndex + 1);
+  newHistory.push(action);
 
-  setZoom: (newZoom) => set({ scale: newZoom }),
-  setStagePos: (newPos) => set({ stagePos: newPos }),
-  setCanvasContainer: (size) => set({ canvasContainer: size }),
+  if (newHistory.length > 100) {
+    newHistory.shift();
+  }
 
-  setSelected: (id: string | null) => set({ selectedId: id }),
+  set({
+    history: newHistory,
+    historyIndex: newHistory.length - 1,
+  });
+};
 
-  // Note: We use `get()` inside actions to access the latest state
-  // without subscribing to changes. This is a performance optimization
-  // that prevents components from re-rendering unnecessarily when they
-  // call these actions.
-  deleteSelected: () => {
-    const id = get().selectedId;
-    if (!id) return;
-    set((state) => ({
-      layers: state.layers.filter((l) => l.id !== id),
-      selectedId: null,
-    }));
-  },
+export const useEditorStore = create<EditorState>((set, get) => {
+  const addAction = recordAction(set, get);
 
-  bringForward: () => {
-    const id = get().selectedId;
-    if (!id) return;
-    set((state) => {
-      const idx = state.layers.findIndex((l) => l.id === id);
-      if (idx === -1 || idx === state.layers.length - 1) return {};
-      const layers = [...state.layers];
-      const [item] = layers.splice(idx, 1);
-      layers.splice(idx + 1, 0, item);
-      return { layers };
-    });
-  },
+  return {
+    width: 800,
+    height: 600,
+    background: '#ffffff',
+    layers: [],
+    history: [],
+    historyIndex: -1,
+    selectedId: null,
+    scale: 1,
+    stagePos: { x: 0, y: 0 },
+    canvasContainer: { width: 0, height: 0 },
 
-  sendBackward: () => {
-    const id = get().selectedId;
-    if (!id) return;
-    set((state) => {
-      const idx = state.layers.findIndex((l) => l.id === id);
-      if (idx <= 0) return {};
-      const layers = [...state.layers];
-      const [item] = layers.splice(idx, 1);
-      layers.splice(idx - 1, 0, item);
-      return { layers };
-    });
-  },
+    setZoom: (newZoom) => set({ scale: newZoom }),
+    setStagePos: (newPos) => set({ stagePos: newPos }),
+    setCanvasContainer: (size) => set({ canvasContainer: size }),
 
-  addText: () =>
-    set((state) => ({
-      layers: [
-        ...state.layers,
-        {
-          id: uuidv4(),
-          type: 'text',
-          x: 100,
-          y: 100,
-          text: 'New Text',
-          fontSize: 24,
-          fontFamily: 'Arial',
-          fill: '#000000',
-          locked: false,
-          visible: true,
-        } as TextLayer,
-      ],
-    })),
+    setSelected: (id: string | null) => set({ selectedId: id }),
 
-  addRect: () =>
-    set((state) => ({
-      layers: [
-        ...state.layers,
-        {
-          id: uuidv4(),
-          type: 'rect',
-          x: 150,
-          y: 150,
-          width: 100,
-          height: 80,
-          fill: '#007bff',
-          locked: false,
-          visible: true,
-        } as RectLayer,
-      ],
-    })),
+    deleteSelected: () => {
+      const id = get().selectedId;
+      if (!id) return;
+      const index = get().layers.findIndex((l) => l.id === id);
+      const layer = get().layers[index];
+      if (layer) {
+        addAction({ type: 'DELETE_LAYER', payload: { layer, index } });
+        set((state) => ({
+          layers: state.layers.filter((l) => l.id !== id),
+          selectedId: null,
+        }));
+      }
+    },
 
-  addImage: (src: string) =>
-    set((state) => ({
-      layers: [
-        ...state.layers,
-        {
-          id: uuidv4(),
-          type: 'image',
-          x: 200,
-          y: 200,
-          width: 200,
-          height: 200,
-          src,
-          locked: false,
-          visible: true,
-        } as ImageLayer,
-      ],
-    })),
+    bringForward: () => {
+      const id = get().selectedId;
+      if (!id) return;
+      const idx = get().layers.findIndex((l) => l.id === id);
+      if (idx === -1 || idx === get().layers.length - 1) return;
+      addAction({ type: 'REORDER_LAYERS', payload: { oldIndex: idx, newIndex: idx + 1 } });
+      set((state) => {
+        const layers = [...state.layers];
+        const [item] = layers.splice(idx, 1);
+        layers.splice(idx + 1, 0, item);
+        return { layers };
+      });
+    },
 
-  updateLayer: (id: string, changes: Partial<Layer>) => {
-    const layers = get().layers.map((l) => (l.id === id ? { ...l, ...changes } : l));
-    set({ layers: layers as Layer[] });
-  },
+    sendBackward: () => {
+      const id = get().selectedId;
+      if (!id) return;
+      const idx = get().layers.findIndex((l) => l.id === id);
+      if (idx <= 0) return;
+      addAction({ type: 'REORDER_LAYERS', payload: { oldIndex: idx, newIndex: idx - 1 } });
+      set((state) => {
+        const layers = [...state.layers];
+        const [item] = layers.splice(idx, 1);
+        layers.splice(idx - 1, 0, item);
+        return { layers };
+      });
+    },
 
-  lockLayer: (id:string) =>
-    set((state) => ({
-      layers: state.layers.map((l) => (l.id === id ? { ...l, locked: true } : l)),
-    })),
+    addText: () => {
+      const newLayer: TextLayer = {
+        id: uuidv4(),
+        type: 'text',
+        x: 100,
+        y: 100,
+        text: 'New Text',
+        fontSize: 24,
+        fontFamily: 'Arial',
+        fill: '#000000',
+        locked: false,
+        visible: true,
+      };
+      addAction({ type: 'ADD_LAYER', payload: newLayer });
+      set((state) => ({
+        layers: [...state.layers, newLayer],
+      }));
+    },
 
-  unlockLayer: (id: string) =>
-    set((state) => ({
-      layers: state.layers.map((l) => (l.id === id ? { ...l, locked: false } : l)),
-    })),
+    addRect: () => {
+      const newLayer: RectLayer = {
+        id: uuidv4(),
+        type: 'rect',
+        x: 150,
+        y: 150,
+        width: 100,
+        height: 80,
+        fill: '#007bff',
+        locked: false,
+        visible: true,
+      };
+      addAction({ type: 'ADD_LAYER', payload: newLayer });
+      set((state) => ({
+        layers: [...state.layers, newLayer],
+      }));
+    },
 
-  isLocked: (id: string) => {
-    const layer = get().layers.find((l) => l.id === id);
-    return !!layer?.locked;
-  },
+    addImage: (src: string) => {
+      const newLayer: ImageLayer = {
+        id: uuidv4(),
+        type: 'image',
+        x: 200,
+        y: 200,
+        width: 200,
+        height: 200,
+        src,
+        locked: false,
+        visible: true,
+      };
+      addAction({ type: 'ADD_LAYER', payload: newLayer });
+      set((state) => ({
+        layers: [...state.layers, newLayer],
+      }));
+    },
 
-  toggleVisibility: (id: string) =>
-    set((state) => ({
-      layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
-    })),
+    updateLayer: (id: string, changes: Partial<Layer>) => {
+      const layer = get().layers.find((l) => l.id === id);
+      if (layer) {
+        const previousChanges: Partial<Layer> = {};
+        for (const key in changes) {
+          (previousChanges as any)[key] = (layer as any)[key];
+        }
+        addAction({ type: 'UPDATE_LAYER', payload: { id, changes, previousChanges } });
+        set((state) => ({
+          layers: state.layers.map((l) => (l.id === id ? { ...l, ...changes } : l)),
+        }));
+      }
+    },
+
+    lockLayer: (id: string) => {
+      const layer = get().layers.find((l) => l.id === id);
+      if (layer) {
+        addAction({
+          type: 'UPDATE_LAYER',
+          payload: { id, changes: { locked: true }, previousChanges: { locked: layer.locked } },
+        });
+        set((state) => ({
+          layers: state.layers.map((l) => (l.id === id ? { ...l, locked: true } : l)),
+        }));
+      }
+    },
+
+    unlockLayer: (id: string) => {
+      const layer = get().layers.find((l) => l.id === id);
+      if (layer) {
+        addAction({
+          type: 'UPDATE_LAYER',
+          payload: { id, changes: { locked: false }, previousChanges: { locked: layer.locked } },
+        });
+        set((state) => ({
+          layers: state.layers.map((l) => (l.id === id ? { ...l, locked: false } : l)),
+        }));
+      }
+    },
+
+    isLocked: (id: string) => {
+      const layer = get().layers.find((l) => l.id === id);
+      return !!layer?.locked;
+    },
+
+    toggleVisibility: (id: string) => {
+      const layer = get().layers.find((l) => l.id === id);
+      if (layer) {
+        addAction({
+          type: 'UPDATE_LAYER',
+          payload: { id, changes: { visible: !layer.visible }, previousChanges: { visible: layer.visible } },
+        });
+        set((state) => ({
+          layers: state.layers.map((l) => (l.id === id ? { ...l, visible: !l.visible } : l)),
+        }));
+      }
+    },
 
     reorderLayers: (oldIndex: number, newIndex: number) => {
-        set((state) => {
-          if (oldIndex < 0 || oldIndex >= state.layers.length || newIndex < 0 || newIndex >= state.layers.length) {
-            return {};
-          }
-          const layers = [...state.layers];
-          const [movedLayer] = layers.splice(oldIndex, 1);
-          layers.splice(newIndex, 0, movedLayer);
-          return { layers };
-        });
-      },
-}));
+      addAction({ type: 'REORDER_LAYERS', payload: { oldIndex, newIndex } });
+      set((state) => {
+        const layers = [...state.layers];
+        const [movedLayer] = layers.splice(oldIndex, 1);
+        layers.splice(newIndex, 0, movedLayer);
+        return { layers };
+      });
+    },
+
+    undo: () => {
+      const { history, historyIndex, layers } = get();
+      if (historyIndex < 0) return;
+
+      const action = history[historyIndex];
+      let newLayers = [...layers];
+
+      switch (action.type) {
+        case 'ADD_LAYER':
+          newLayers = newLayers.filter((l) => l.id !== action.payload.id);
+          break;
+        case 'DELETE_LAYER':
+          newLayers.splice(action.payload.index, 0, action.payload.layer);
+          break;
+        case 'UPDATE_LAYER':
+          newLayers = newLayers.map((l) =>
+            l.id === action.payload.id ? { ...l, ...action.payload.previousChanges } : l
+          );
+          break;
+        case 'REORDER_LAYERS':
+          const [movedLayer] = newLayers.splice(action.payload.newIndex, 1);
+          newLayers.splice(action.payload.oldIndex, 0, movedLayer);
+          break;
+      }
+      set({ layers: newLayers, historyIndex: historyIndex - 1 });
+    },
+
+    redo: () => {
+      const { history, historyIndex, layers } = get();
+      if (historyIndex >= history.length - 1) return;
+
+      const newHistoryIndex = historyIndex + 1;
+      const action = history[newHistoryIndex];
+      let newLayers = [...layers];
+
+      switch (action.type) {
+        case 'ADD_LAYER':
+          newLayers.push(action.payload);
+          break;
+        case 'DELETE_LAYER':
+          newLayers = newLayers.filter((l) => l.id !== action.payload.layer.id);
+          break;
+        case 'UPDATE_LAYER':
+          newLayers = newLayers.map((l) =>
+            l.id === action.payload.id ? { ...l, ...action.payload.changes } : l
+          );
+          break;
+        case 'REORDER_LAYERS':
+          const [movedLayer] = newLayers.splice(action.payload.oldIndex, 1);
+          newLayers.splice(action.payload.newIndex, 0, movedLayer);
+          break;
+      }
+      set({ layers: newLayers, historyIndex: newHistoryIndex });
+    },
+
+    setHistoryIndex: (index: number) => {
+      const { history } = get();
+      if (index < -1 || index >= history.length) return;
+
+      let layers: Layer[] = [];
+      for (let i = 0; i <= index; i++) {
+        const action = history[i];
+        switch (action.type) {
+          case 'ADD_LAYER':
+            layers.push(action.payload);
+            break;
+          case 'DELETE_LAYER':
+            layers = layers.filter((l) => l.id !== action.payload.layer.id);
+            break;
+          case 'UPDATE_LAYER':
+            layers = layers.map((l) =>
+              l.id === action.payload.id ? { ...l, ...action.payload.changes } : l
+            );
+            break;
+          case 'REORDER_LAYERS':
+            const [movedLayer] = layers.splice(action.payload.oldIndex, 1);
+            layers.splice(action.payload.newIndex, 0, movedLayer);
+            break;
+        }
+      }
+      set({ layers, historyIndex: index });
+    },
+  };
+});

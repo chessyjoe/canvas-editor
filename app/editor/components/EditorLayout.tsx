@@ -10,8 +10,9 @@ import TemplateSelectorPanel from './TemplateSelectorPanel';
 import CanvasToolbar from './CanvasToolbar';
 import ExportPanel from './ExportPanel';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
+import HistoryPanel from './HistoryPanel';
 
-export type ViewId = 'layers' | 'properties' | 'canvas' | 'ai' | 'templates' | 'toolbar' | 'export';
+export type ViewId = 'layers' | 'properties' | 'canvas' | 'ai' | 'templates' | 'toolbar' | 'export' | 'history';
 
 const TITLE_MAP: Record<ViewId, string> = {
   layers: 'Layers',
@@ -21,6 +22,7 @@ const TITLE_MAP: Record<ViewId, string> = {
   templates: 'Templates',
   toolbar: 'Toolbar',
   export: 'Export',
+  history: 'History',
 };
 
 interface EditorLayoutProps {
@@ -29,12 +31,20 @@ interface EditorLayoutProps {
 }
 
 const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
-  const { scale, setZoom, setStagePos } = useEditorStore();
+  const { scale, setZoom, setStagePos, undo, redo } = useEditorStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey) {
         switch (e.key) {
+          case 'z':
+            e.preventDefault();
+            undo();
+            break;
+          case 'y':
+            e.preventDefault();
+            redo();
+            break;
           case '+':
           case '=':
             e.preventDefault();
@@ -57,7 +67,7 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [scale, setZoom, setStagePos]);
+  }, [scale, setZoom, setStagePos, undo, redo]);
 
   const renderTile = (id: ViewId, path: any) => (
     <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
@@ -68,6 +78,7 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
       {id === 'templates' && <TemplateSelectorPanel />}
       {id === 'toolbar' && <CanvasToolbar />}
       {id === 'export' && <ExportPanel />}
+      {id === 'history' && <HistoryPanel />}
     </MosaicWindow>
   );
 

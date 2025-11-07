@@ -71,12 +71,72 @@ const replaceNode = (
   return newNode;
 };
 
+const addNode = (
+  currentNode: MosaicNode<ViewId> | null,
+  target: ViewId,
+  newNode: ViewId,
+  direction: 'row' | 'column' = 'row',
+  splitPercentage = 50
+): MosaicNode<ViewId> | null => {
+  if (!currentNode) return { direction, first: target, second: newNode, splitPercentage };
+  const newLayout = deepClone(currentNode);
+
+  function recurse(node: MosaicNode<ViewId> | ViewId): MosaicNode<ViewId> | ViewId {
+    if (typeof node === 'string') {
+      if (node === target) {
+        return { direction, first: target, second: newNode, splitPercentage };
+      }
+      return node;
+    }
+    node.first = recurse(node.first);
+    node.second = recurse(node.second);
+    return node;
+  }
+
+  return recurse(newLayout as MosaicNode<ViewId>);
+};
+
+const removeNode = (
+  currentNode: MosaicNode<ViewId> | null,
+  target: ViewId
+): MosaicNode<ViewId> | null => {
+    if (!currentNode) return null;
+    const newLayout = deepClone(currentNode);
+
+    function recurse(node: MosaicNode<ViewId> | ViewId): MosaicNode<ViewId> | ViewId | null {
+        if (typeof node === 'string') {
+            return node === target ? null : node;
+        }
+
+        if (node.first === target) return node.second;
+        if (node.second === target) return node.first;
+
+        const first = recurse(node.first);
+        const second = recurse(node.second);
+
+        if (first && second) {
+            node.first = first;
+            node.second = second;
+            return node;
+        } else if (first) {
+            return first;
+        } else if (second) {
+            return second;
+        } else {
+            return null;
+        }
+    }
+
+    return recurse(newLayout as MosaicNode<ViewId>) as MosaicNode<ViewId> | null;
+};
+
 
 export default function EditorPage() {
   const { layers, width, height, background, setCanvasContainer } = useEditorStore();
   const [showNotification, setShowNotification] = useState(false);
   const [currentNode, setCurrentNode] = useState<MosaicNode<ViewId> | null>(DEFAULT_LAYOUT);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,6 +175,15 @@ export default function EditorPage() {
     setShowExportPanel(!showExportPanel);
   };
 
+  const toggleHistoryPanel = () => {
+    if (showHistoryPanel) {
+        setCurrentNode(removeNode(currentNode, 'history'));
+    } else {
+        setCurrentNode(addNode(currentNode, 'properties', 'history', 'column'));
+    }
+    setShowHistoryPanel(!showHistoryPanel);
+    };
+
   useEffect(() => {
     if (showNotification) {
       const timer = setTimeout(() => {
@@ -137,6 +206,9 @@ export default function EditorPage() {
           <button onClick={toggleExportPanel} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">
             {showExportPanel ? 'Properties' : 'Export'}
           </button>
+          <button onClick={toggleHistoryPanel} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">
+            {showHistoryPanel ? 'Hide History' : 'Show History'}
+            </button>
           <button onClick={resetLayout} className="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">Reset Layout</button>
         </div>
       </header>
