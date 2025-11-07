@@ -19,6 +19,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import PanelCard from './ui/PanelCard';
 
 // Individual Draggable Layer Item
 function SortableLayerItem({ layer }: { layer: Layer }) {
@@ -99,21 +100,20 @@ export default function LayersPanel() {
   }
 
   return (
-    <div className="p-3">
-      <h3 className="mb-2.5">Layers</h3>
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext items={layers.map(l => l.id)} strategy={verticalListSortingStrategy}>
-                <ul className="list-none p-0">
-                    {layers.map((layer) => (
-                        <SortableLayerItem key={layer.id} layer={layer} />
-                    ))}
-                </ul>
-            </SortableContext>
+    <PanelCard title="Layers">
+      <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+      >
+          <SortableContext items={layers.map(l => l.id)} strategy={verticalListSortingStrategy}>
+              <ul className="list-none p-0">
+                  {layers.map((layer) => (
+                      <SortableLayerItem key={layer.id} layer={layer} />
+                  ))}
+              </ul>
+          </SortableContext>
       </DndContext>
-    </div>
+    </PanelCard>
   );
 }
