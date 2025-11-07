@@ -8,23 +8,30 @@ import PanelCard from './ui/PanelCard';
 
 export default function PropertiesPanel() {
   const {
-    selectedId,
+    selectedIds,
     layers,
     updateLayer,
     deleteSelected,
     bringForward,
     sendBackward,
+    startCropping,
+    stopCropping,
+    croppingLayerId,
   } = useEditorStore();
-  const layer = layers.find((l) => l.id === selectedId);
 
-  if (!layer)
+  const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
+  const layer = layers.find((l) => l.id === selectedId);
+  const isCropping = croppingLayerId === layer?.id;
+
+  if (!layer || !selectedId) {
     return (
       <PanelCard title="Properties">
         <div className="p-4 text-gray-500">
-          <p>No selection</p>
+          <p>{selectedIds.length > 1 ? 'Multiple items selected' : 'No selection'}</p>
         </div>
       </PanelCard>
     );
+  }
 
   return (
     <PanelCard title="Properties">
@@ -61,6 +68,7 @@ export default function PropertiesPanel() {
                 type="number"
                 value={layer.width}
                 onChange={(e) => updateLayer(layer.id, { width: parseInt(e.target.value) || 10 })}
+                disabled={isCropping}
               />
             </div>
 
@@ -71,6 +79,7 @@ export default function PropertiesPanel() {
                 type="number"
                 value={layer.height}
                 onChange={(e) => updateLayer(layer.id, { height: parseInt(e.target.value) || 10 })}
+                disabled={isCropping}
               />
             </div>
           </>
@@ -88,14 +97,32 @@ export default function PropertiesPanel() {
           </div>
         )}
 
+        {layer.type === 'image' && !isCropping && (
+          <Button onClick={() => startCropping(layer.id)}>Crop Image</Button>
+        )}
+
+        {isCropping && (
+          <div className="flex gap-2">
+            <Button onClick={() => stopCropping(true)}>Apply Crop</Button>
+            <Button variant="secondary" onClick={() => stopCropping(false)}>
+              Cancel
+            </Button>
+          </div>
+        )}
+
         <div className="flex gap-2">
-          <Button onClick={sendBackward}>⬇ Send Backward</Button>
-          <Button onClick={bringForward}>⬆ Bring Forward</Button>
+          <Button onClick={sendBackward} disabled={isCropping}>
+            ⬇ Send Backward
+          </Button>
+          <Button onClick={bringForward} disabled={isCropping}>
+            ⬆ Bring Forward
+          </Button>
         </div>
 
         <Button
           variant="destructive"
           onClick={deleteSelected}
+          disabled={isCropping}
         >
           Delete
         </Button>

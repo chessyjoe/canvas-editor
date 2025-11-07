@@ -39,6 +39,10 @@ export interface ImageLayer extends BaseLayer {
   width: number;
   height: number;
   src: string;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
 }
 
 export type Layer = TextLayer | RectLayer | ImageLayer;
@@ -59,6 +63,9 @@ export interface EditorState {
   scale: number;
   stagePos: { x: number; y: number };
   canvasContainer: { width: number; height: number };
+  croppingLayerId?: string;
+  startCropping: (layerId: string) => void;
+  stopCropping: (apply: boolean) => void;
 
   // Zoom & Pan
   setZoom: (newZoom: number) => void;
@@ -126,6 +133,61 @@ export const useEditorStore = create<EditorState>((set, get) => {
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
+    croppingLayerId: undefined,
+
+    startCropping: (layerId) => set({ croppingLayerId: layerId, selectedIds: [] }),
+    stopCropping: (apply) => {
+      const { croppingLayerId, layers } = get();
+      if (!croppingLayerId) return;
+
+      const layer = layers.find((l) => l.id === croppingLayerId) as ImageLayer;
+      if (apply && layer) {
+        const { cropX = 0, cropY = 0, cropWidth = layer.width, cropHeight = layer.height } = layer;
+        const newWidth = cropWidth;
+        const newHeight = cropHeight;
+
+        // Adjust position based on the crop
+        const newX = layer.x + cropX;
+        const newY = layer.y + cropY;
+
+        set((state) => ({
+          layers: state.layers.map((l) =>
+            l.id === croppingLayerId
+              ? {
+                  ...l,
+                  x: newX,
+                  y: newY,
+                  width: newWidth,
+                  height: newHeight,
+                  cropX: undefined,
+                  cropY: undefined,
+                  cropWidth: undefined,
+                  cropHeight: undefined,
+                }
+              : l
+          ),
+          croppingLayerId: undefined,
+          selectedIds: [croppingLayerId],
+        }));
+      } else {
+        // When cancelling, reset any crop adjustments made during the session
+        set((state) => ({
+          layers: state.layers.map((l) =>
+            l.id === croppingLayerId
+              ? {
+                  ...l,
+                  cropX: undefined,
+                  cropY: undefined,
+                  cropWidth: undefined,
+                  cropHeight: undefined,
+                }
+              : l
+          ),
+          croppingLayerId: undefined,
+          selectedIds: [croppingLayerId],
+        }));
+      }
+    },
 
     setZoom: (newZoom) => set({ scale: newZoom }),
     setStagePos: (newPos) => set({ stagePos: newPos }),
