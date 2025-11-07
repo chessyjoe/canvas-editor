@@ -11,6 +11,7 @@ import CanvasToolbar from './CanvasToolbar';
 import ExportPanel from './ExportPanel';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import HistoryPanel from './HistoryPanel';
+import { EditorMode } from '@/canvas/store/types';
 
 export type ViewId = 'layers' | 'properties' | 'canvas' | 'ai' | 'templates' | 'toolbar' | 'export' | 'history';
 
@@ -31,10 +32,29 @@ interface EditorLayoutProps {
 }
 
 const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
-  const { scale, setZoom, setStagePos, undo, redo } = useEditorStore();
+  const {
+    scale,
+    setZoom,
+    setStagePos,
+    undo,
+    redo,
+    mode,
+    setMode,
+    previousMode,
+    setPreviousMode,
+    isResizing,
+  } = useEditorStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isResizing) {
+        e.preventDefault();
+        if (mode !== EditorMode.PAN) {
+          setPreviousMode(mode);
+          setMode(EditorMode.PAN);
+        }
+      }
+
       if (e.ctrlKey) {
         switch (e.key) {
           case 'z':
@@ -63,11 +83,23 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
       }
     };
 
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isResizing) {
+        e.preventDefault();
+        if (previousMode) {
+          setMode(previousMode);
+          setPreviousMode(null);
+        }
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [scale, setZoom, setStagePos, undo, redo]);
+  }, [scale, setZoom, setStagePos, undo, redo, mode, previousMode, isResizing, setMode, setPreviousMode]);
 
   const renderTile = (id: ViewId, path: any) => (
     <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>

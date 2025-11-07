@@ -20,6 +20,9 @@ export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
       onDragEnd={onDragEnd}
+      rotation={layer.rotation}
+      scaleX={layer.scaleX}
+      scaleY={layer.scaleY}
     />
   );
 }

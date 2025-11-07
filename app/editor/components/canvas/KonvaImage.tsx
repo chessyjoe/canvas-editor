@@ -24,19 +24,9 @@ export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd:
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
       onDragEnd={onDragEnd}
-      onTransformEnd={(e) => {
-        const node: any = e.target;
-        const scaleX = node.scaleX();
-        const scaleY = node.scaleY();
-        node.scaleX(1);
-        node.scaleY(1);
-        updateLayer(layer.id, {
-          x: node.x(),
-          y: node.y(),
-          width: Math.max(10, node.width() * scaleX),
-          height: Math.max(10, node.height() * scaleY),
-        });
-      }}
+      rotation={layer.rotation}
+      scaleX={layer.scaleX}
+      scaleY={layer.scaleY}
     />
   );
 }

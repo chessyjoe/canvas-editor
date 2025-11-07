@@ -1,19 +1,22 @@
 'use client';
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import { EditorMode } from './types';
 
 // The state is designed to be serializable.
 // This means it can be easily saved to JSON and restored later.
 // All properties are primitive types or plain objects.
 
 export type LayerType = 'text' | 'image' | 'rect';
-export type Tool = 'select' | 'pan' | 'lasso';
 
 export interface BaseLayer {
   id: string;
   type: LayerType;
   x: number;
   y: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
   locked?: boolean;
   visible?: boolean;
   groupId?: string;
@@ -55,7 +58,9 @@ export interface EditorState {
   background: string;
   layers: Layer[];
   selectedIds: string[];
-  tool: Tool;
+  mode: EditorMode;
+  previousMode: EditorMode | null;
+  isResizing: boolean;
   scale: number;
   stagePos: { x: number; y: number };
   canvasContainer: { width: number; height: number };
@@ -69,7 +74,9 @@ export interface EditorState {
   setSelecteds: (ids: string[]) => void;
   addToSelection: (id: string) => void;
   removeFromSelection: (id: string) => void;
-  setTool: (tool: Tool) => void;
+  setMode: (mode: EditorMode) => void;
+  setPreviousMode: (mode: EditorMode | null) => void;
+  setIsResizing: (isResizing: boolean) => void;
   selectAll: () => void;
   deleteSelected: () => void;
   bringForward: () => void;
@@ -122,7 +129,9 @@ export const useEditorStore = create<EditorState>((set, get) => {
     history: [],
     historyIndex: -1,
     selectedIds: [],
-    tool: 'select',
+    mode: EditorMode.SELECT,
+    previousMode: null,
+    isResizing: false,
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
@@ -134,7 +143,9 @@ export const useEditorStore = create<EditorState>((set, get) => {
     setSelecteds: (ids: string[]) => set({ selectedIds: ids }),
     addToSelection: (id: string) => set((state) => ({ selectedIds: [...state.selectedIds, id] })),
     removeFromSelection: (id: string) => set((state) => ({ selectedIds: state.selectedIds.filter((i) => i !== id) })),
-    setTool: (tool: Tool) => set({ tool }),
+    setMode: (mode: EditorMode) => set({ mode }),
+    setPreviousMode: (mode: EditorMode | null) => set({ previousMode: mode }),
+    setIsResizing: (isResizing: boolean) => set({ isResizing }),
     selectAll: () => set((state) => ({ selectedIds: state.layers.map((l) => l.id) })),
 
     deleteSelected: () => {

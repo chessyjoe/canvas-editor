@@ -9,8 +9,31 @@ import { KonvaImage } from './canvas/KonvaImage';
 import { KonvaText } from './canvas/KonvaText';
 import { TransformerManager } from './canvas/TransformerManager';
 import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore';
+import { EditorMode } from '@/canvas/store/types';
 
 export default function CanvasArea() {
+  React.useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    let cursor = 'default';
+    if (isResizing) {
+      cursor = 'nesw-resize'; // Or more specific cursor based on handle
+    } else {
+      switch (mode) {
+        case EditorMode.PAN:
+          cursor = 'grab';
+          break;
+        case EditorMode.BOX_SELECT:
+        case EditorMode.LASSO:
+          cursor = 'crosshair';
+          break;
+      }
+    }
+
+    stage.container().style.cursor = cursor;
+  }, [mode, isResizing]);
+
   const {
     width,
     height,
@@ -25,7 +48,8 @@ export default function CanvasArea() {
     setZoom,
     setStagePos,
     canvasContainer,
-    tool,
+    mode,
+    isResizing,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -67,38 +91,44 @@ export default function CanvasArea() {
   };
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    if (tool === 'pan' || (tool === 'select' && e.target !== e.target.getStage())) {
-      if (e.target !== e.target.getStage()) {
-        const id = e.target.id();
-        if (e.evt.shiftKey) {
-          if (selectedIds.includes(id)) {
-            removeFromSelection(id);
-          } else {
-            addToSelection(id);
-          }
-        } else {
-          if (!selectedIds.includes(id)) {
-            setSelecteds([id]);
-          }
-        }
-      }
-      return;
-    }
+    if (isResizing) return;
 
     const stage = stageRef.current;
     if (!stage) return;
     const pos = stage.getRelativePointerPosition();
     if (!pos) return;
 
-    if (tool === 'select') {
-      setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
-    } else if (tool === 'lasso') {
-      setIsLassoing(true);
-      setLassoPoints([pos.x, pos.y]);
+    switch (mode) {
+      case EditorMode.BOX_SELECT:
+        setSelectionRect({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y, visible: true });
+        break;
+      case EditorMode.LASSO:
+        setIsLassoing(true);
+        setLassoPoints([pos.x, pos.y]);
+        break;
+      case EditorMode.SELECT:
+        if (e.target !== stage) {
+          const id = e.target.id();
+          if (e.evt.shiftKey) {
+            if (selectedIds.includes(id)) {
+              removeFromSelection(id);
+            } else {
+              addToSelection(id);
+            }
+          } else {
+            if (!selectedIds.includes(id)) {
+              setSelecteds([id]);
+            }
+          }
+        } else {
+          setSelecteds([]);
+        }
+        break;
     }
   };
 
   const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
+    if (isResizing) return;
     const stage = stageRef.current;
     if (!stage) return;
     const pos = stage.getRelativePointerPosition();
@@ -112,6 +142,7 @@ export default function CanvasArea() {
   };
 
   const handleMouseUp = () => {
+    if (isResizing) return;
     if (selectionRect.visible) {
       const stage = stageRef.current;
       if (!stage) return;
@@ -197,7 +228,7 @@ export default function CanvasArea() {
         width={canvasContainer.width}
         height={canvasContainer.height}
         ref={stageRef}
-        draggable={tool === 'pan'}
+        draggable={mode === 'pan'}
         x={stagePos.x}
         y={stagePos.y}
         scaleX={scale}
@@ -226,6 +257,9 @@ export default function CanvasArea() {
                   draggable={!layer.locked}
                   opacity={layer.locked ? 0.5 : 1}
                   onDragEnd={handleDragEnd}
+                  rotation={layer.rotation}
+                  scaleX={layer.scaleX}
+                  scaleY={layer.scaleY}
                 />
               );
           })}

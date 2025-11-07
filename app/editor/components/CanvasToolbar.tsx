@@ -2,7 +2,8 @@
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
-import { FaMousePointer, FaHandPaper, FaDrawPolygon } from 'react-icons/fa';
+import { FaMousePointer, FaHandPaper, FaDrawPolygon, FaVectorSquare } from 'react-icons/fa';
+import { EditorMode } from '@/canvas/store/types';
 
 export default function CanvasToolbar() {
   const {
@@ -19,8 +20,8 @@ export default function CanvasToolbar() {
     width,
     height,
     canvasContainer,
-    tool,
-    setTool,
+    mode,
+    setMode,
     groupSelection,
     ungroupSelection,
     selectedIds,
@@ -70,22 +71,29 @@ export default function CanvasToolbar() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12 }}>
       <div style={{ display: 'flex', gap: 4 }}>
         <Button
-          onClick={() => setTool('select')}
-          variant={tool === 'select' ? 'secondary' : 'ghost'}
-          title="Box Selection"
+          onClick={() => setMode(EditorMode.SELECT)}
+          variant={mode === EditorMode.SELECT ? 'secondary' : 'ghost'}
+          title="Select"
         >
           <FaMousePointer />
         </Button>
         <Button
-          onClick={() => setTool('pan')}
-          variant={tool === 'pan' ? 'secondary' : 'ghost'}
+          onClick={() => setMode(EditorMode.BOX_SELECT)}
+          variant={mode === EditorMode.BOX_SELECT ? 'secondary' : 'ghost'}
+          title="Box Selection"
+        >
+          <FaVectorSquare />
+        </Button>
+        <Button
+          onClick={() => setMode(EditorMode.PAN)}
+          variant={mode === EditorMode.PAN ? 'secondary' : 'ghost'}
           title="Pan"
         >
           <FaHandPaper />
         </Button>
         <Button
-          onClick={() => setTool('lasso')}
-          variant={tool === 'lasso' ? 'secondary' : 'ghost'}
+          onClick={() => setMode(EditorMode.LASSO)}
+          variant={mode === EditorMode.LASSO ? 'secondary' : 'ghost'}
           title="Lasso Selection"
         >
           <FaDrawPolygon />
