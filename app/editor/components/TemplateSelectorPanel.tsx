@@ -1,12 +1,12 @@
 'use client';
 import React from 'react';
+import PanelCard from './ui/PanelCard';
 
 const TemplateSelectorPanel = () => {
   return (
-    <div className="p-4 h-full">
-      <h2 className="text-lg font-semibold mb-4">Templates</h2>
+    <PanelCard title="Templates">
       <p className="text-sm text-gray-500">Template selector panel placeholder.</p>
-    </div>
+    </PanelCard>
   );
 };
 

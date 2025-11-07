@@ -3,6 +3,8 @@ import React from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { saveAs } from 'file-saver';
 import PptxGenJS from 'pptxgenjs';
+import PanelCard from './ui/PanelCard';
+import { Button } from './ui/button';
 
 export default function ExportPanel() {
   const { layers, width, height } = useEditorStore();
@@ -32,9 +34,11 @@ export default function ExportPanel() {
   };
 
   return (
-    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <button onClick={exportPNG}>Export PNG</button>
-      <button onClick={exportPPTX}>Export PPTX</button>
-    </div>
+    <PanelCard title="Export">
+      <div className="flex flex-col gap-2">
+        <Button onClick={exportPNG}>Export PNG</Button>
+        <Button onClick={exportPPTX}>Export PPTX</Button>
+      </div>
+    </PanelCard>
   );
 }
