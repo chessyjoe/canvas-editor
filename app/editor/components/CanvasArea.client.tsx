@@ -9,9 +9,45 @@ import { TransformerManager } from './canvas/TransformerManager';
 import { ImageLayer, TextLayer } from '@/canvas/store/useEditorStore';
 
 export default function CanvasArea() {
-  const { width, height, background, layers, setSelected } = useEditorStore();
+  const {
+    width,
+    height,
+    background,
+    layers,
+    setSelected,
+    scale,
+    stagePos,
+    setZoom,
+    setStagePos,
+  } = useEditorStore();
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
+
+  const handleWheel = (e: any) => {
+    if (!e.evt.ctrlKey) return;
+    e.evt.preventDefault();
+    const scaleBy = 1.05;
+    const stage = stageRef.current;
+    if (!stage) return;
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+    setZoom(newScale);
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    setStagePos(newPos);
+  };
 
   return (
     <div style={{ border: '1px solid #ddd', background }}>
@@ -19,6 +55,13 @@ export default function CanvasArea() {
         width={width}
         height={height}
         ref={stageRef}
+        draggable
+        x={stagePos.x}
+        y={stagePos.y}
+        scaleX={scale}
+        scaleY={scale}
+        onDragEnd={(e) => setStagePos({ x: e.target.x(), y: e.target.y() })}
+        onWheel={handleWheel}
         onMouseDown={(e) => {
           if (e.target === e.target.getStage()) setSelected(null);
         }}
