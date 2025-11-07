@@ -12,28 +12,6 @@ import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore'
 import { EditorMode } from '@/canvas/store/types';
 
 export default function CanvasArea() {
-  React.useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    let cursor = 'default';
-    if (isResizing) {
-      cursor = 'nesw-resize'; // Or more specific cursor based on handle
-    } else {
-      switch (mode) {
-        case EditorMode.PAN:
-          cursor = 'grab';
-          break;
-        case EditorMode.BOX_SELECT:
-        case EditorMode.LASSO:
-          cursor = 'crosshair';
-          break;
-      }
-    }
-
-    stage.container().style.cursor = cursor;
-  }, [mode, isResizing]);
-
   const {
     width,
     height,
@@ -56,6 +34,28 @@ export default function CanvasArea() {
   const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
   const [lassoPoints, setLassoPoints] = useState<number[]>([]);
   const [isLassoing, setIsLassoing] = useState(false);
+
+  React.useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    let cursor = 'default';
+    if (isResizing) {
+      cursor = 'nesw-resize'; // Or more specific cursor based on handle
+    } else {
+      switch (mode) {
+        case EditorMode.PAN:
+          cursor = 'grab';
+          break;
+        case EditorMode.BOX_SELECT:
+        case EditorMode.LASSO:
+          cursor = 'crosshair';
+          break;
+      }
+    }
+
+    stage.container().style.cursor = cursor;
+  }, [mode, isResizing]);
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
