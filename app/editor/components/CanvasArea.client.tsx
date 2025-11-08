@@ -8,6 +8,7 @@ import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { KonvaImage } from './canvas/KonvaImage';
 import { KonvaText } from './canvas/KonvaText';
 import { TransformerManager } from './canvas/TransformerManager';
+import { InlineTextEditor } from './canvas/InlineTextEditor';
 import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore';
 import { Line } from 'react-konva';
 import { Guides } from './Guides';
@@ -293,6 +294,7 @@ export default function CanvasArea() {
           )}
         </Layer>
       </Stage>
+      <InlineTextEditor />
     </div>
   );
 }

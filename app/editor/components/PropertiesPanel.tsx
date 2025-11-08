@@ -244,6 +244,65 @@ export default function PropertiesPanel() {
                 updateLayer(layer.id, { strokeWidth: parseInt(e.target.value) || 0 })
               }
             />
+
+            <div className="flex items-center gap-2">
+              <Label>Fill</Label>
+              <Button
+                variant={layer.fillPriority === 'color' ? 'secondary' : 'outline'}
+                onClick={() => updateLayer(layer.id, { fillPriority: 'color' })}
+              >
+                Color
+              </Button>
+              <Button
+                variant={layer.fillPriority === 'gradient' ? 'secondary' : 'outline'}
+                onClick={() => updateLayer(layer.id, { fillPriority: 'gradient' })}
+              >
+                Gradient
+              </Button>
+            </div>
+
+            {layer.fillPriority === 'gradient' && (
+              <div className="flex flex-col gap-2">
+                <div>
+                  <Label>Color Stops</Label>
+                  {layer.fillLinearGradientColorStops?.map((stop, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2"
+                    >
+                      <Input
+                        type="number"
+                        step="0.1"
+                        max="1"
+                        min="0"
+                        value={stop[0]}
+                        onChange={(e) => {
+                          const stops = [...(layer.fillLinearGradientColorStops || [])];
+                          stops[i] = [parseFloat(e.target.value), stops[i][1]];
+                          updateLayer(layer.id, { fillLinearGradientColorStops: stops });
+                        }}
+                      />
+                      <Input
+                        type="color"
+                        value={stop[1]}
+                        onChange={(e) => {
+                          const stops = [...(layer.fillLinearGradientColorStops || [])];
+                          stops[i] = [stops[i][0], e.target.value];
+                          updateLayer(layer.id, { fillLinearGradientColorStops: stops });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button
+              disabled
+              title="Coming Soon"
+            >
+              Rich Text
+            </Button>
           </>
         )}
 

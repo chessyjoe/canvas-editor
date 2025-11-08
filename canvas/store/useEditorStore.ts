@@ -38,6 +38,10 @@ export interface TextLayer extends BaseLayer {
   shadowOffsetY?: number;
   stroke?: string;
   strokeWidth?: number;
+  fillPriority?: 'color' | 'gradient';
+  fillLinearGradientStartPoint?: { x: number; y: number };
+  fillLinearGradientEndPoint?: { x: number; y: number };
+  fillLinearGradientColorStops?: [number, string][];
 }
 
 export interface RectLayer extends BaseLayer {
@@ -141,6 +145,8 @@ export interface EditorState {
   // Stage Ref
   stageRef: React.RefObject<any> | null;
   setStageRef: (ref: React.RefObject<any>) => void;
+  editingLayerId: string | null;
+  setEditingLayerId: (id: string | null) => void;
 }
 
 const recordAction = (set: any, get: any) => (action: HistoryAction) => {
@@ -198,6 +204,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
 
     stageRef: null,
     setStageRef: (ref) => set({ stageRef: ref }),
+    editingLayerId: null,
+    setEditingLayerId: (id) => set({ editingLayerId: id }),
 
     setZoom: (newZoom) => set({ scale: newZoom }),
     setStagePos: (newPos) => set({ stagePos: newPos }),
@@ -289,6 +297,13 @@ export const useEditorStore = create<EditorState>((set, get) => {
         shadowOffsetY: 0,
         stroke: undefined,
         strokeWidth: 0,
+        fillPriority: 'color',
+        fillLinearGradientStartPoint: { x: 0, y: 0 },
+        fillLinearGradientEndPoint: { x: 0, y: 0 },
+        fillLinearGradientColorStops: [
+          [0, '#000000'],
+          [1, '#ffffff'],
+        ],
       };
       addAction({ type: 'ADD_LAYER', payload: newLayer });
       set((state) => ({
