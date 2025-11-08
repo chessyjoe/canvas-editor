@@ -110,6 +110,24 @@ export interface EditorState {
   toggleGrid: () => void;
   setGridSize: (size: number) => void;
   setGridColor: (color: string) => void;
+
+  // Rulers & Guides
+  rulersVisible: boolean;
+  guides: { id: string; orientation: 'horizontal' | 'vertical'; position: number }[];
+  toggleRulers: () => void;
+  addGuide: (guide: { id: string; orientation: 'horizontal' | 'vertical'; position: number }) => void;
+  updateGuide: (id: string, position: number) => void;
+  deleteGuide: (id: string) => void;
+
+  // Snapping
+  snapToGrid: boolean;
+  snapToGuides: boolean;
+  toggleSnapToGrid: () => void;
+  toggleSnapToGuides: () => void;
+
+  // Stage Ref
+  stageRef: React.RefObject<any> | null;
+  setStageRef: (ref: React.RefObject<any>) => void;
 }
 
 const recordAction = (set: any, get: any) => (action: HistoryAction) => {
@@ -149,6 +167,24 @@ export const useEditorStore = create<EditorState>((set, get) => {
     toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),
     setGridSize: (size: number) => set({ gridSize: size }),
     setGridColor: (color: string) => set({ gridColor: color }),
+
+    rulersVisible: true,
+    guides: [],
+    toggleRulers: () => set((state) => ({ rulersVisible: !state.rulersVisible })),
+    addGuide: (guide) => set((state) => ({ guides: [...state.guides, guide] })),
+    updateGuide: (id, position) =>
+      set((state) => ({
+        guides: state.guides.map((g) => (g.id === id ? { ...g, position } : g)),
+      })),
+    deleteGuide: (id) => set((state) => ({ guides: state.guides.filter((g) => g.id !== id) })),
+
+    snapToGrid: true,
+    snapToGuides: true,
+    toggleSnapToGrid: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
+    toggleSnapToGuides: () => set((state) => ({ snapToGuides: !state.snapToGuides })),
+
+    stageRef: null,
+    setStageRef: (ref) => set({ stageRef: ref }),
 
     setZoom: (newZoom) => set({ scale: newZoom }),
     setStagePos: (newPos) => set({ stagePos: newPos }),
