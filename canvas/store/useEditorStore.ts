@@ -28,7 +28,16 @@ export interface TextLayer extends BaseLayer {
   fontWeight: 'normal' | 'bold';
   fontStyle: 'normal' | 'italic';
   textDecoration: 'none' | 'underline';
-  textAlign: 'left' | 'center' | 'right';
+  textAlign: 'left' | 'center' | 'right' | 'justify';
+  lineHeight: number;
+  letterSpacing: number;
+  textBackgroundColor?: string;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 export interface RectLayer extends BaseLayer {
@@ -271,6 +280,15 @@ export const useEditorStore = create<EditorState>((set, get) => {
         fontStyle: 'normal',
         textDecoration: 'none',
         textAlign: 'left',
+        lineHeight: 1.2,
+        letterSpacing: 0,
+        textBackgroundColor: undefined,
+        shadowColor: undefined,
+        shadowBlur: 0,
+        shadowOffsetX: 0,
+        shadowOffsetY: 0,
+        stroke: undefined,
+        strokeWidth: 0,
       };
       addAction({ type: 'ADD_LAYER', payload: newLayer });
       set((state) => ({
