@@ -1,20 +1,22 @@
 'use client';
 import React from 'react';
-import { useEditorStore } from '@/canvas/store/useEditorStore';
+import { useEditorStore, TextLayer } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
 import { Input } from '@/app/editor/components/ui/input';
 import { Label } from '@/app/editor/components/ui/label';
 import PanelCard from './ui/PanelCard';
+import TextProperties from './TextProperties';
 
 export default function PropertiesPanel() {
   const {
-    selectedId,
+    selectedIds,
     layers,
     updateLayer,
     deleteSelected,
     bringForward,
     sendBackward,
   } = useEditorStore();
+  const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
   const layer = layers.find((l) => l.id === selectedId);
 
   if (!layer)
@@ -30,26 +32,7 @@ export default function PropertiesPanel() {
     <PanelCard title="Properties">
       <div className="flex flex-col gap-4">
         {layer.type === 'text' && (
-          <>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="text">Text</Label>
-              <Input
-                id="text"
-                value={layer.text}
-                onChange={(e) => updateLayer(layer.id, { text: e.target.value })}
-              />
-            </div>
-
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="fontSize">Font Size</Label>
-              <Input
-                id="fontSize"
-                type="number"
-                value={layer.fontSize}
-                onChange={(e) => updateLayer(layer.id, { fontSize: parseInt(e.target.value) || 12 })}
-              />
-            </div>
-          </>
+          <TextProperties layer={layer as TextLayer} />
         )}
 
         {(layer.type === 'rect' || layer.type === 'image') && (
@@ -76,7 +59,7 @@ export default function PropertiesPanel() {
           </>
         )}
 
-        {(layer.type === 'text' || layer.type === 'rect') && (
+        {layer.type === 'rect' && (
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="color">Color</Label>
             <Input

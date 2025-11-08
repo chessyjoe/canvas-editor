@@ -7,6 +7,10 @@ import { TextLayer } from '@/canvas/store/useEditorStore';
 import { KonvaEventObject } from 'konva/lib/Node';
 
 export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
+  const fontStyle = [layer.fontWeight, layer.fontStyle]
+    .filter((s) => s && s !== 'normal')
+    .join(' ')
+    .trim();
 
   return (
     <KText
@@ -20,6 +24,11 @@ export function KonvaText({ layer, onDragEnd }: { layer: TextLayer; onDragEnd: (
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
       onDragEnd={onDragEnd}
+      fontStyle={fontStyle || 'normal'}
+      textDecoration={layer.textDecoration}
+      align={layer.textAlign}
+      lineHeight={layer.lineHeight}
+      letterSpacing={layer.letterSpacing}
     />
   );
 }
