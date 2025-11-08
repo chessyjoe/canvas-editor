@@ -5,6 +5,7 @@ import { Button } from '@/app/editor/components/ui/button';
 import { Input } from '@/app/editor/components/ui/input';
 import { Label } from '@/app/editor/components/ui/label';
 import PanelCard from './ui/PanelCard';
+import { shallow } from 'zustand/shallow';
 
 export default function PropertiesPanel() {
   const {
@@ -17,7 +18,20 @@ export default function PropertiesPanel() {
     startCropping,
     stopCropping,
     croppingLayerId,
-  } = useEditorStore();
+  } = useEditorStore(
+    (state) => ({
+      selectedIds: state.selectedIds,
+      layers: state.layers,
+      updateLayer: state.updateLayer,
+      deleteSelected: state.deleteSelected,
+      bringForward: state.bringForward,
+      sendBackward: state.sendBackward,
+      startCropping: state.startCropping,
+      stopCropping: state.stopCropping,
+      croppingLayerId: state.croppingLayerId,
+    }),
+    shallow,
+  );
 
   const selectedId = selectedIds.length === 1 ? selectedIds[0] : null;
   const layer = layers.find((l) => l.id === selectedId);

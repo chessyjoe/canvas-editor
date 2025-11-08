@@ -70,15 +70,17 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
   }, [scale, setZoom, setStagePos, undo, redo]);
 
   const renderTile = (id: ViewId, path: any) => (
-    <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
-      {id === 'layers' && <LayersPanel />}
-      {id === 'properties' && <PropertiesPanel />}
-      {id === 'canvas' && <CanvasArea />}
-      {id === 'ai' && <AIAssistantPanel />}
-      {id === 'templates' && <TemplateSelectorPanel />}
-      {id === 'toolbar' && <CanvasToolbar />}
-      {id === 'export' && <ExportPanel />}
-      {id === 'history' && <HistoryPanel />}
+    <MosaicWindow<ViewId> path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
+      <div style={{ width: '100%', height: '100%' }}>
+        {id === 'layers' && <LayersPanel />}
+        {id === 'properties' && <PropertiesPanel />}
+        {id === 'canvas' && <CanvasArea />}
+        {id === 'ai' && <AIAssistantPanel />}
+        {id === 'templates' && <TemplateSelectorPanel />}
+        {id === 'toolbar' && <CanvasToolbar />}
+        {id === 'export' && <ExportPanel />}
+        {id === 'history' && <HistoryPanel />}
+      </div>
     </MosaicWindow>
   );
 
