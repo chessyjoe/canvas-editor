@@ -70,6 +70,60 @@ export default function PropertiesPanel() {
                 onChange={(e) => updateLayer(layer.id, { fontSize: parseInt(e.target.value) || 12 })}
               />
             </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant={layer.fontWeight === 'bold' ? 'secondary' : 'outline'}
+                onClick={() =>
+                  updateLayer(layer.id, {
+                    fontWeight: layer.fontWeight === 'bold' ? 'normal' : 'bold',
+                  })
+                }
+              >
+                Bold
+              </Button>
+              <Button
+                variant={layer.fontStyle === 'italic' ? 'secondary' : 'outline'}
+                onClick={() =>
+                  updateLayer(layer.id, {
+                    fontStyle: layer.fontStyle === 'italic' ? 'normal' : 'italic',
+                  })
+                }
+              >
+                Italic
+              </Button>
+              <Button
+                variant={layer.textDecoration === 'underline' ? 'secondary' : 'outline'}
+                onClick={() =>
+                  updateLayer(layer.id, {
+                    textDecoration: layer.textDecoration === 'underline' ? 'none' : 'underline',
+                  })
+                }
+              >
+                Underline
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant={layer.textAlign === 'left' ? 'secondary' : 'outline'}
+                onClick={() => updateLayer(layer.id, { textAlign: 'left' })}
+              >
+                Left
+              </Button>
+              <Button
+                variant={layer.textAlign === 'center' ? 'secondary' : 'outline'}
+                onClick={() => updateLayer(layer.id, { textAlign: 'center' })}
+              >
+                Center
+              </Button>
+              <Button
+                variant={layer.textAlign === 'right' ? 'secondary' : 'outline'}
+                onClick={() => updateLayer(layer.id, { textAlign: 'right' })}
+              >
+                Right
+              </Button>
+            </div>
           </>
         )}
 

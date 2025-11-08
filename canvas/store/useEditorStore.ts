@@ -25,6 +25,10 @@ export interface TextLayer extends BaseLayer {
   fontSize: number;
   fontFamily: string;
   fill: string;
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+  textDecoration: 'none' | 'underline';
+  textAlign: 'left' | 'center' | 'right';
 }
 
 export interface RectLayer extends BaseLayer {
@@ -263,10 +267,15 @@ export const useEditorStore = create<EditorState>((set, get) => {
         fill: '#000000',
         locked: false,
         visible: true,
+        fontWeight: 'normal',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'left',
       };
       addAction({ type: 'ADD_LAYER', payload: newLayer });
       set((state) => ({
         layers: [...state.layers, newLayer],
+        selectedIds: [newLayer.id],
       }));
     },
 

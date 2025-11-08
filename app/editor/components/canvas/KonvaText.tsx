@@ -8,6 +8,8 @@ import { KonvaEventObject } from 'konva/lib/Node';
 
 export function KonvaText({ layer, onDragStart, onDragEnd }: { layer: TextLayer; onDragStart: (e: KonvaEventObject<DragEvent>) => void; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
 
+  const fontStyle = `${layer.fontWeight} ${layer.fontStyle === 'italic' ? 'italic' : ''}`.trim();
+
   return (
     <KText
       id={layer.id}
@@ -21,6 +23,9 @@ export function KonvaText({ layer, onDragStart, onDragEnd }: { layer: TextLayer;
       opacity={layer.locked ? 0.5 : 1}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      fontStyle={fontStyle}
+      textDecoration={layer.textDecoration}
+      align={layer.textAlign}
     />
   );
 }
