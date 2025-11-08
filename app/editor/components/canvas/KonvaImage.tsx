@@ -7,7 +7,7 @@ import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { ImageLayer } from '@/canvas/store/useEditorStore';
 import { KonvaEventObject } from 'konva/lib/Node';
 
-export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
+export function KonvaImage({ layer, onDragStart, onDragEnd }: { layer: ImageLayer; onDragStart: (e: KonvaEventObject<DragEvent>) => void; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
   const [img] = useImage(layer.src, 'anonymous');
   const { updateLayer } = useEditorStore.getState();
 
@@ -23,6 +23,7 @@ export function KonvaImage({ layer, onDragEnd }: { layer: ImageLayer; onDragEnd:
       height={layer.height}
       draggable={!layer.locked}
       opacity={layer.locked ? 0.5 : 1}
+      onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onTransformEnd={(e) => {
         const node: any = e.target;

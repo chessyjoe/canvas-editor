@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
@@ -9,6 +9,9 @@ import { KonvaImage } from './canvas/KonvaImage';
 import { KonvaText } from './canvas/KonvaText';
 import { TransformerManager } from './canvas/TransformerManager';
 import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore';
+import { Line } from 'react-konva';
+import { Guides } from './Guides';
+import { SmartGuides } from './SmartGuides';
 
 export default function CanvasArea() {
   const {
@@ -26,10 +29,70 @@ export default function CanvasArea() {
     setStagePos,
     canvasContainer,
     tool,
+    gridVisible,
+    gridSize,
+    gridColor,
+    guides,
+    snapToGrid,
+    snapToGuides,
+    setStageRef,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
+  const [draggingLayerId, setDraggingLayerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStageRef(stageRef);
+  }, [setStageRef]);
+
+  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
+    setDraggingLayerId(e.target.id());
+  };
+
+  const renderGrid = () => {
+    if (!gridVisible) return null;
+
+    const lines = [];
+    const stroke = gridColor;
+    const strokeWidth = 1;
+
+    const viewRect = {
+      x1: -stagePos.x / scale,
+      y1: -stagePos.y / scale,
+      x2: (-stagePos.x + canvasContainer.width) / scale,
+      y2: (-stagePos.y + canvasContainer.height) / scale,
+    };
+
+    const startX = Math.floor(viewRect.x1 / gridSize) * gridSize;
+    const endX = Math.ceil(viewRect.x2 / gridSize) * gridSize;
+    const startY = Math.floor(viewRect.y1 / gridSize) * gridSize;
+    const endY = Math.ceil(viewRect.y2 / gridSize) * gridSize;
+
+    for (let x = startX; x < endX; x += gridSize) {
+      lines.push(
+        <Line
+          key={`v-${x}`}
+          points={[x, viewRect.y1, x, viewRect.y2]}
+          stroke={stroke}
+          strokeWidth={strokeWidth / scale}
+        />,
+      );
+    }
+
+    for (let y = startY; y < endY; y += gridSize) {
+      lines.push(
+        <Line
+          key={`h-${y}`}
+          points={[viewRect.x1, y, viewRect.x2, y]}
+          stroke={stroke}
+          strokeWidth={strokeWidth / scale}
+        />,
+      );
+    }
+
+    return <Layer listening={false}>{lines}</Layer>;
+  };
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -132,10 +195,32 @@ export default function CanvasArea() {
     const layer = layers.find((l) => l.id === id);
     if (!layer) return;
 
-    const dx = e.target.x() - layer.x;
-    const dy = e.target.y() - layer.y;
+    let x = e.target.x();
+    let y = e.target.y();
 
-    updateLayer(id, { x: e.target.x(), y: e.target.y() });
+    if (snapToGrid) {
+      x = Math.round(x / gridSize) * gridSize;
+      y = Math.round(y / gridSize) * gridSize;
+    }
+
+    if (snapToGuides) {
+      guides.forEach((guide) => {
+        if (guide.orientation === 'vertical') {
+          if (Math.abs(x - guide.position) < 10) {
+            x = guide.position;
+          }
+        } else {
+          if (Math.abs(y - guide.position) < 10) {
+            y = guide.position;
+          }
+        }
+      });
+    }
+
+    const dx = x - layer.x;
+    const dy = y - layer.y;
+
+    updateLayer(id, { x, y });
 
     if (layer.groupId) {
       layers.forEach((l) => {
@@ -144,6 +229,7 @@ export default function CanvasArea() {
         }
       });
     }
+    setDraggingLayerId(null);
   };
 
   return (
@@ -170,11 +256,14 @@ export default function CanvasArea() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
+        {renderGrid()}
         <Layer>
+          <Guides />
+          <SmartGuides draggingLayerId={draggingLayerId} />
           {layers.map((layer) => {
             if (!layer.visible) return null;
-            if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer as ImageLayer} onDragEnd={handleDragEnd} />;
-            if (layer.type === 'text') return <KonvaText key={layer.id} layer={layer as TextLayer} onDragEnd={handleDragEnd} />;
+            if (layer.type === 'image') return <KonvaImage key={layer.id} layer={layer as ImageLayer} onDragStart={handleDragStart} onDragEnd={handleDragEnd} />;
+            if (layer.type === 'text') return <KonvaText key={layer.id} layer={layer as TextLayer} onDragStart={handleDragStart} onDragEnd={handleDragEnd} />;
             if (layer.type === 'rect')
               return (
                 <Rect
@@ -187,6 +276,7 @@ export default function CanvasArea() {
                   fill={(layer as RectLayer).fill}
                   draggable={!layer.locked}
                   opacity={layer.locked ? 0.5 : 1}
+                  onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
                 />
               );
