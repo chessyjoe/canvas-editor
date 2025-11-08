@@ -87,6 +87,14 @@ export interface EditorState {
   reorderLayers: (oldIndex: number, newIndex: number) => void;
   groupSelection: () => void;
   ungroupSelection: () => void;
+  alignLeft: () => void;
+  alignCenter: () => void;
+  alignRight: () => void;
+  alignTop: () => void;
+  alignMiddle: () => void;
+  alignBottom: () => void;
+  distributeHorizontally: () => void;
+  distributeVertically: () => void;
 
   // History
   history: HistoryAction[];
@@ -341,6 +349,156 @@ export const useEditorStore = create<EditorState>((set, get) => {
           layer.groupId && groupIds.has(layer.groupId) ? { ...layer, groupId: undefined } : layer
         ),
       }));
+    },
+
+    alignLeft: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const minX = Math.min(...selectedLayers.map((l) => l.x));
+      selectedLayers.forEach((layer) => {
+        updateLayer(layer.id, { x: minX });
+      });
+    },
+
+    alignCenter: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const boundingBox = selectedLayers.reduce(
+        (acc, layer) => {
+          const width = 'width' in layer ? layer.width : 0;
+          return {
+            minX: Math.min(acc.minX, layer.x),
+            maxX: Math.max(acc.maxX, layer.x + width),
+          };
+        },
+        { minX: Infinity, maxX: -Infinity }
+      );
+
+      const center = boundingBox.minX + (boundingBox.maxX - boundingBox.minX) / 2;
+
+      selectedLayers.forEach((layer) => {
+        const width = 'width' in layer ? layer.width : 0;
+        updateLayer(layer.id, { x: center - width / 2 });
+      });
+    },
+
+    alignRight: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const maxX = Math.max(
+        ...selectedLayers.map((l) => {
+          const width = 'width' in l ? l.width : 0;
+          return l.x + width;
+        })
+      );
+
+      selectedLayers.forEach((layer) => {
+        const width = 'width' in layer ? layer.width : 0;
+        updateLayer(layer.id, { x: maxX - width });
+      });
+    },
+
+    alignTop: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const minY = Math.min(...selectedLayers.map((l) => l.y));
+      selectedLayers.forEach((layer) => {
+        updateLayer(layer.id, { y: minY });
+      });
+    },
+
+    alignMiddle: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const boundingBox = selectedLayers.reduce(
+        (acc, layer) => {
+          const height = 'height' in layer ? layer.height : 0;
+          return {
+            minY: Math.min(acc.minY, layer.y),
+            maxY: Math.max(acc.maxY, layer.y + height),
+          };
+        },
+        { minY: Infinity, maxY: -Infinity }
+      );
+
+      const middle = boundingBox.minY + (boundingBox.maxY - boundingBox.minY) / 2;
+
+      selectedLayers.forEach((layer) => {
+        const height = 'height' in layer ? layer.height : 0;
+        updateLayer(layer.id, { y: middle - height / 2 });
+      });
+    },
+
+    alignBottom: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 2) return;
+
+      const maxY = Math.max(
+        ...selectedLayers.map((l) => {
+          const height = 'height' in l ? l.height : 0;
+          return l.y + height;
+        })
+      );
+
+      selectedLayers.forEach((layer) => {
+        const height = 'height' in layer ? layer.height : 0;
+        updateLayer(layer.id, { y: maxY - height });
+      });
+    },
+
+    distributeHorizontally: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 3) return;
+
+      const sortedLayers = [...selectedLayers].sort((a, b) => a.x - b.x);
+      const minX = sortedLayers[0].x;
+      const maxXLayer = sortedLayers[sortedLayers.length - 1];
+      const maxX = maxXLayer.x + ('width' in maxXLayer ? maxXLayer.width : 0);
+      const totalWidth = sortedLayers.reduce((acc, l) => acc + ('width' in l ? l.width : 0), 0);
+      const spacing = (maxX - minX - totalWidth) / (sortedLayers.length - 1);
+
+      let currentX = minX;
+      sortedLayers.forEach((layer, index) => {
+        if (index > 0) {
+          const prevLayer = sortedLayers[index - 1];
+          currentX += ('width' in prevLayer ? prevLayer.width : 0) + spacing;
+        }
+        updateLayer(layer.id, { x: currentX });
+      });
+    },
+
+    distributeVertically: () => {
+      const { layers, selectedIds, updateLayer } = get();
+      const selectedLayers = selectedIds.map((id) => layers.find((l) => l.id === id)).filter((l): l is Layer => !!l);
+      if (selectedLayers.length < 3) return;
+
+      const sortedLayers = [...selectedLayers].sort((a, b) => a.y - b.y);
+      const minY = sortedLayers[0].y;
+      const maxYLayer = sortedLayers[sortedLayers.length - 1];
+      const maxY = maxYLayer.y + ('height' in maxYLayer ? maxYLayer.height : 0);
+      const totalHeight = sortedLayers.reduce((acc, l) => acc + ('height' in l ? l.height : 0), 0);
+      const spacing = (maxY - minY - totalHeight) / (sortedLayers.length - 1);
+
+      let currentY = minY;
+      sortedLayers.forEach((layer, index) => {
+        if (index > 0) {
+          const prevLayer = sortedLayers[index - 1];
+          currentY += ('height' in prevLayer ? prevLayer.height : 0) + spacing;
+        }
+        updateLayer(layer.id, { y: currentY });
+      });
     },
 
     undo: () => {

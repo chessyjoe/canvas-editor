@@ -2,7 +2,16 @@
 import React, { useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { Button } from '@/app/editor/components/ui/button';
-import { FaMousePointer, FaHandPaper, FaDrawPolygon } from 'react-icons/fa';
+import {
+  FaMousePointer,
+  FaHandPaper,
+  FaDrawPolygon,
+  FaAlignLeft,
+  FaAlignCenter,
+  FaAlignRight,
+} from 'react-icons/fa';
+import { BsAlignBottom, BsAlignMiddle, BsAlignTop } from 'react-icons/bs';
+import { TbLayoutDistributeHorizontal, TbLayoutDistributeVertical } from 'react-icons/tb';
 
 export default function CanvasToolbar() {
   const {
@@ -26,6 +35,14 @@ export default function CanvasToolbar() {
     selectedIds,
     selectAll,
     layers,
+    alignLeft,
+    alignCenter,
+    alignRight,
+    alignTop,
+    alignMiddle,
+    alignBottom,
+    distributeHorizontally,
+    distributeVertically,
   } = useEditorStore();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -104,6 +121,36 @@ export default function CanvasToolbar() {
         </Button>
         <Button onClick={ungroupSelection} disabled={selectedIds.length === 0}>
           Ungroup
+        </Button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={alignLeft} disabled={selectedIds.length < 2} title="Align Left">
+          <FaAlignLeft />
+        </Button>
+        <Button onClick={alignCenter} disabled={selectedIds.length < 2} title="Align Center">
+          <FaAlignCenter />
+        </Button>
+        <Button onClick={alignRight} disabled={selectedIds.length < 2} title="Align Right">
+          <FaAlignRight />
+        </Button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={alignTop} disabled={selectedIds.length < 2} title="Align Top">
+          <BsAlignTop />
+        </Button>
+        <Button onClick={alignMiddle} disabled={selectedIds.length < 2} title="Align Middle">
+          <BsAlignMiddle />
+        </Button>
+        <Button onClick={alignBottom} disabled={selectedIds.length < 2} title="Align Bottom">
+          <BsAlignBottom />
+        </Button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={distributeHorizontally} disabled={selectedIds.length < 3} title="Distribute Horizontally">
+          <TbLayoutDistributeHorizontal />
+        </Button>
+        <Button onClick={distributeVertically} disabled={selectedIds.length < 3} title="Distribute Vertically">
+          <TbLayoutDistributeVertical />
         </Button>
       </div>
       <Button onClick={addText}>Add Text</Button>
