@@ -23,6 +23,8 @@ export interface TextLayer extends BaseLayer {
   type: 'text';
   text: string;
   fontSize: number;
+  width?: number;
+  height?: number;
   fontFamily: string;
   fill: string;
   fontWeight: 'normal' | 'bold';
@@ -278,6 +280,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
         type: 'text',
         x: 100,
         y: 100,
+        width: 120,
+        height: 30,
         text: 'New Text',
         fontSize: 24,
         fontFamily: 'Arial',

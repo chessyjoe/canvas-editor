@@ -22,5 +22,24 @@ export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObj
     }
   }, [selectedIds, stageRef, trRef]);
 
-  return <Transformer ref={trRef} />;
+  const { updateLayer } = useEditorStore.getState();
+
+  const onTransformEnd = (e: any) => {
+    const node = e.target;
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+    const width = Math.max(5, node.width() * scaleX);
+    const height = Math.max(node.height() * scaleY);
+
+    updateLayer(node.id(), {
+      x: node.x(),
+      y: node.y(),
+      width,
+      height,
+    });
+    node.scaleX(1);
+    node.scaleY(1);
+  };
+
+  return <Transformer ref={trRef} onTransformEnd={onTransformEnd} />;
 }

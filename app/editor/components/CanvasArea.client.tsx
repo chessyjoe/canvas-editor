@@ -130,7 +130,7 @@ export default function CanvasArea() {
 
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
     if (tool === 'pan' || e.target !== e.target.getStage()) {
-      if (e.target !== e.target.getStage()) {
+      if (e.target.attrs.type !== 'text' && e.target !== e.target.getStage()) {
         const id = e.target.id();
         if (e.evt.shiftKey) {
           if (selectedIds.includes(id)) {

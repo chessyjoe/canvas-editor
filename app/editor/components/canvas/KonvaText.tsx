@@ -14,9 +14,25 @@ export function KonvaText({
   onDragStart: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
 }) {
-  const { editingLayerId, setEditingLayerId } = useEditorStore();
+  const { editingLayerId, setEditingLayerId, selectedIds, addToSelection, removeFromSelection, setSelecteds } = useEditorStore();
 
   const isEditing = layer.id === editingLayerId;
+
+  const handleClick = (e: KonvaEventObject<MouseEvent>) => {
+    e.evt.preventDefault();
+    const id = layer.id;
+    if (e.evt.shiftKey) {
+      if (selectedIds.includes(id)) {
+        removeFromSelection(id);
+      } else {
+        addToSelection(id);
+      }
+    } else {
+      if (!selectedIds.includes(id)) {
+        setSelecteds([id]);
+      }
+    }
+  };
 
   return (
     <KLabel
@@ -27,9 +43,11 @@ export function KonvaText({
       opacity={layer.locked ? 0.5 : 1}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onClick={handleClick}
       onDblClick={() => setEditingLayerId(layer.id)}
       onDblTap={() => setEditingLayerId(layer.id)}
-      visible={!isEditing}
+      listening={!isEditing}
+      opacity={isEditing ? 0.5 : layer.locked ? 0.5 : 1}
     >
       <KTag fill={layer.textBackgroundColor} />
       <KText
