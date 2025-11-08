@@ -8,20 +8,41 @@ import PanelCard from './ui/PanelCard';
 
 export default function PropertiesPanel() {
   const {
-    selectedId,
+    selectedIds,
     layers,
     updateLayer,
     deleteSelected,
     bringForward,
     sendBackward,
+    gridSize,
+    setGridSize,
+    gridColor,
+    setGridColor,
   } = useEditorStore();
-  const layer = layers.find((l) => l.id === selectedId);
+  const layer = layers.find((l) => l.id === selectedIds[0]);
 
   if (!layer)
     return (
       <PanelCard title="Properties">
-        <div className="p-4 text-gray-500">
-          <p>No selection</p>
+        <div className="flex flex-col gap-4">
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="gridSize">Grid Size</Label>
+            <Input
+              id="gridSize"
+              type="number"
+              value={gridSize}
+              onChange={(e) => setGridSize(parseInt(e.target.value) || 20)}
+            />
+          </div>
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="gridColor">Grid Color</Label>
+            <Input
+              id="gridColor"
+              type="color"
+              value={gridColor}
+              onChange={(e) => setGridColor(e.target.value)}
+            />
+          </div>
         </div>
       </PanelCard>
     );

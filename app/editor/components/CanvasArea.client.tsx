@@ -29,6 +29,7 @@ export default function CanvasArea() {
     tool,
     gridVisible,
     gridSize,
+    gridColor,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -38,7 +39,7 @@ export default function CanvasArea() {
     if (!gridVisible) return null;
 
     const lines = [];
-    const stroke = '#f0f0f0';
+    const stroke = gridColor;
     const strokeWidth = 1;
 
     const viewRect = {

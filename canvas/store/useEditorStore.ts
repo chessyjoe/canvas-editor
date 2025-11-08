@@ -106,8 +106,10 @@ export interface EditorState {
   // Grid
   gridVisible: boolean;
   gridSize: number;
+  gridColor: string;
   toggleGrid: () => void;
   setGridSize: (size: number) => void;
+  setGridColor: (color: string) => void;
 }
 
 const recordAction = (set: any, get: any) => (action: HistoryAction) => {
@@ -143,8 +145,10 @@ export const useEditorStore = create<EditorState>((set, get) => {
 
     gridVisible: false,
     gridSize: 20,
+    gridColor: '#f0f0f0',
     toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),
     setGridSize: (size: number) => set({ gridSize: size }),
+    setGridColor: (color: string) => set({ gridColor: color }),
 
     setZoom: (newZoom) => set({ scale: newZoom }),
     setStagePos: (newPos) => set({ stagePos: newPos }),
