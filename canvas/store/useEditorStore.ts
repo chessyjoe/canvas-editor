@@ -102,6 +102,12 @@ export interface EditorState {
   undo: () => void;
   redo: () => void;
   setHistoryIndex: (index: number) => void;
+
+  // Grid
+  gridVisible: boolean;
+  gridSize: number;
+  toggleGrid: () => void;
+  setGridSize: (size: number) => void;
 }
 
 const recordAction = (set: any, get: any) => (action: HistoryAction) => {
@@ -134,6 +140,11 @@ export const useEditorStore = create<EditorState>((set, get) => {
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
+
+    gridVisible: false,
+    gridSize: 20,
+    toggleGrid: () => set((state) => ({ gridVisible: !state.gridVisible })),
+    setGridSize: (size: number) => set({ gridSize: size }),
 
     setZoom: (newZoom) => set({ scale: newZoom }),
     setStagePos: (newPos) => set({ stagePos: newPos }),

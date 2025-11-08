@@ -43,6 +43,8 @@ export default function CanvasToolbar() {
     alignBottom,
     distributeHorizontally,
     distributeVertically,
+    toggleGrid,
+    gridVisible,
   } = useEditorStore();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -167,6 +169,11 @@ export default function CanvasToolbar() {
         <Button onClick={() => zoom(0.8)}>Zoom Out</Button>
         <Button onClick={resetZoom}>Reset</Button>
         <Button onClick={fitToScreen}>Fit</Button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 12 }}>
+        <Button onClick={toggleGrid} variant={gridVisible ? 'secondary' : 'ghost'}>
+          Grid
+        </Button>
       </div>
       <input
         ref={fileRef}

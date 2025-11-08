@@ -9,6 +9,7 @@ import { KonvaImage } from './canvas/KonvaImage';
 import { KonvaText } from './canvas/KonvaText';
 import { TransformerManager } from './canvas/TransformerManager';
 import { ImageLayer, TextLayer, RectLayer } from '@/canvas/store/useEditorStore';
+import { Line } from 'react-konva';
 
 export default function CanvasArea() {
   const {
@@ -26,10 +27,56 @@ export default function CanvasArea() {
     setStagePos,
     canvasContainer,
     tool,
+    gridVisible,
+    gridSize,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
+
+  const renderGrid = () => {
+    if (!gridVisible) return null;
+
+    const lines = [];
+    const stroke = '#f0f0f0';
+    const strokeWidth = 1;
+
+    const viewRect = {
+      x1: -stagePos.x / scale,
+      y1: -stagePos.y / scale,
+      x2: (-stagePos.x + canvasContainer.width) / scale,
+      y2: (-stagePos.y + canvasContainer.height) / scale,
+    };
+
+    const startX = Math.floor(viewRect.x1 / gridSize) * gridSize;
+    const endX = Math.ceil(viewRect.x2 / gridSize) * gridSize;
+    const startY = Math.floor(viewRect.y1 / gridSize) * gridSize;
+    const endY = Math.ceil(viewRect.y2 / gridSize) * gridSize;
+
+    for (let x = startX; x < endX; x += gridSize) {
+      lines.push(
+        <Line
+          key={`v-${x}`}
+          points={[x, viewRect.y1, x, viewRect.y2]}
+          stroke={stroke}
+          strokeWidth={strokeWidth / scale}
+        />,
+      );
+    }
+
+    for (let y = startY; y < endY; y += gridSize) {
+      lines.push(
+        <Line
+          key={`h-${y}`}
+          points={[viewRect.x1, y, viewRect.x2, y]}
+          stroke={stroke}
+          strokeWidth={strokeWidth / scale}
+        />,
+      );
+    }
+
+    return <Layer listening={false}>{lines}</Layer>;
+  };
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -170,6 +217,7 @@ export default function CanvasArea() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
+        {renderGrid()}
         <Layer>
           {layers.map((layer) => {
             if (!layer.visible) return null;

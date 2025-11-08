@@ -31,7 +31,7 @@ interface EditorLayoutProps {
 }
 
 const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
-  const { scale, setZoom, setStagePos, undo, redo } = useEditorStore();
+  const { scale, setZoom, setStagePos, undo, redo, toggleGrid } = useEditorStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,6 +59,10 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
             setZoom(1);
             setStagePos({ x: 0, y: 0 });
             break;
+          case "'":
+            e.preventDefault();
+            toggleGrid();
+            break;
         }
       }
     };
@@ -67,7 +71,7 @@ const EditorLayout = ({ currentNode, setCurrentNode }: EditorLayoutProps) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [scale, setZoom, setStagePos, undo, redo]);
+  }, [scale, setZoom, setStagePos, undo, redo, toggleGrid]);
 
   const renderTile = (id: ViewId, path: any) => (
     <MosaicWindow<ViewId> key={id} path={path} createNode={() => 'canvas'} title={TITLE_MAP[id]}>
