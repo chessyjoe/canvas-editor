@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { TextLayer } from '@/canvas/store/useEditorStore';
-import { shallow } from 'zustand/shallow';
+import { shallow } from 'zustand/vanilla/shallow';
 
 export function InlineTextEditor() {
   const { editingLayerId, layers, updateLayer, setEditingLayerId, scale, stagePos } = useEditorStore(

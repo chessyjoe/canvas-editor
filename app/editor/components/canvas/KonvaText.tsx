@@ -4,7 +4,7 @@ import React from 'react';
 import { Label as KLabel, Tag as KTag, Text as KText } from 'react-konva';
 import { useEditorStore, TextLayer } from '@/canvas/store/useEditorStore';
 import { KonvaEventObject } from 'konva/lib/Node';
-import { shallow } from 'zustand/shallow';
+import { shallow } from 'zustand/vanilla/shallow';
 
 export function KonvaText({
   layer,
