@@ -5,7 +5,7 @@ import { Transformer } from 'react-konva';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 
 export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObject<any>; trRef: React.RefObject<any> }) {
-  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const { selectedIds, croppingLayerId } = useEditorStore((s) => ({ selectedIds: s.selectedIds, croppingLayerId: s.croppingLayerId }));
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -22,5 +22,5 @@ export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObj
     }
   }, [selectedIds, stageRef, trRef]);
 
-  return <Transformer ref={trRef} />;
+  return <Transformer ref={trRef} visible={!croppingLayerId} />;
 }

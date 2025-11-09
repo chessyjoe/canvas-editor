@@ -18,10 +18,15 @@ export default function PropertiesPanel() {
     setGridSize,
     gridColor,
     setGridColor,
+    croppingLayerId,
+    startCropping,
+    stopCropping,
+    stageRef,
   } = useEditorStore();
-  const layer = layers.find((l) => l.id === selectedIds[0]);
+  const layer = layers.find((l) => l.id === selectedIds[0] || l.id === croppingLayerId);
+  const isCropping = !!croppingLayerId;
 
-  if (!layer)
+  if (!layer && !isCropping) {
     return (
       <PanelCard title="Properties">
         <div className="flex flex-col gap-4">
@@ -46,6 +51,21 @@ export default function PropertiesPanel() {
         </div>
       </PanelCard>
     );
+  }
+
+  function handleApplyCrop() {
+    if (croppingLayerId && stageRef?.current) {
+      const imageNode = stageRef.current.findOne('#' + croppingLayerId);
+      const cropRect = stageRef.current.findOne('.crop-rect');
+      if (imageNode && cropRect) {
+        const cropX = cropRect.x() - imageNode.x();
+        const cropY = cropRect.y() - imageNode.y();
+        const cropWidth = cropRect.width();
+        const cropHeight = cropRect.height();
+        stopCropping({ cropX, cropY, cropWidth, cropHeight });
+      }
+    }
+  }
 
   return (
     <PanelCard title="Properties">
@@ -120,6 +140,17 @@ export default function PropertiesPanel() {
         >
           Delete
         </Button>
+
+        {layer.type === 'image' && !isCropping && (
+            <Button onClick={() => startCropping(layer.id)}>Crop Image</Button>
+        )}
+
+        {isCropping && (
+            <div className="flex gap-2">
+                <Button onClick={handleApplyCrop}>Apply Crop</Button>
+                <Button variant="secondary" onClick={() => stopCropping(null)}>Cancel</Button>
+            </div>
+        )}
       </div>
     </PanelCard>
   );

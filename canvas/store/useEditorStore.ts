@@ -39,6 +39,10 @@ export interface ImageLayer extends BaseLayer {
   width: number;
   height: number;
   src: string;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
 }
 
 export type Layer = TextLayer | RectLayer | ImageLayer;
@@ -59,6 +63,11 @@ export interface EditorState {
   scale: number;
   stagePos: { x: number; y: number };
   canvasContainer: { width: number; height: number };
+  croppingLayerId: string | null;
+
+  // Cropping
+  startCropping: (layerId: string) => void;
+  stopCropping: (cropData: { cropX: number; cropY: number; cropWidth: number; cropHeight: number } | null) => void;
 
   // Zoom & Pan
   setZoom: (newZoom: number) => void;
@@ -160,6 +169,16 @@ export const useEditorStore = create<EditorState>((set, get) => {
     scale: 1,
     stagePos: { x: 0, y: 0 },
     canvasContainer: { width: 0, height: 0 },
+    croppingLayerId: null,
+
+    startCropping: (layerId) => set({ croppingLayerId: layerId, selectedIds: [] }),
+    stopCropping: (cropData) => {
+        const { croppingLayerId, updateLayer } = get();
+        if (croppingLayerId && cropData) {
+            updateLayer(croppingLayerId, cropData);
+        }
+        set({ croppingLayerId: null });
+    },
 
     gridVisible: false,
     gridSize: 20,

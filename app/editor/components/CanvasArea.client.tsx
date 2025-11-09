@@ -36,11 +36,41 @@ export default function CanvasArea() {
     snapToGrid,
     snapToGuides,
     setStageRef,
+    croppingLayerId,
+    updateLayer,
   } = useEditorStore();
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
+  const cropTrRef = useRef<Konva.Transformer>(null);
+  const [cropRect, setCropRect] = useState<Konva.Rect | null>(null);
   const [selectionRect, setSelectionRect] = useState({ x1: 0, y1: 0, x2: 0, y2: 0, visible: false });
   const [draggingLayerId, setDraggingLayerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    if (croppingLayerId) {
+      const imageNode = stage.findOne('#' + croppingLayerId) as Konva.Image;
+      if (imageNode) {
+        const cropKonvaRect = new Konva.Rect({
+            x: imageNode.x(),
+            y: imageNode.y(),
+            width: imageNode.width(),
+            height: imageNode.height(),
+            draggable: false,
+            name: 'crop-rect',
+        });
+        const layer = stage.findOne('Layer');
+        layer?.add(cropKonvaRect);
+        cropTrRef.current?.nodes([cropKonvaRect]);
+        setCropRect(cropKonvaRect);
+      }
+    } else {
+        cropRect?.destroy();
+        setCropRect(null);
+    }
+  }, [croppingLayerId]);
 
   useEffect(() => {
     setStageRef(stageRef);
@@ -282,6 +312,18 @@ export default function CanvasArea() {
               );
           })}
           <TransformerManager stageRef={stageRef} trRef={trRef} />
+          <Transformer
+            ref={cropTrRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // limit resize
+              if (newBox.width < 10 || newBox.height < 10) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+            keepRatio={true}
+            enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+          />
           {selectionRect.visible && (
             <Rect
               x={Math.min(selectionRect.x1, selectionRect.x2)}

@@ -10,13 +10,28 @@ import { KonvaEventObject } from 'konva/lib/Node';
 export function KonvaImage({ layer, onDragStart, onDragEnd }: { layer: ImageLayer; onDragStart: (e: KonvaEventObject<DragEvent>) => void; onDragEnd: (e: KonvaEventObject<DragEvent>) => void; }) {
   const [img] = useImage(layer.src, 'anonymous');
   const { updateLayer } = useEditorStore.getState();
+  const imageRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (imageRef.current) {
+      imageRef.current.cache();
+    }
+  }, [layer.cropX, layer.cropY, layer.cropWidth, layer.cropHeight, img]);
 
   if (!img) return null;
 
+  const clipFunc = (ctx: any) => {
+    if (layer.cropWidth && layer.cropHeight) {
+      ctx.rect(layer.cropX, layer.cropY, layer.cropWidth, layer.cropHeight);
+    }
+  };
+
   return (
     <KImage
+      ref={imageRef}
       image={img}
       id={layer.id}
+      clipFunc={clipFunc}
       x={layer.x}
       y={layer.y}
       width={layer.width}
