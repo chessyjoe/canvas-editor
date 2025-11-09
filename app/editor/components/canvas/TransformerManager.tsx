@@ -3,12 +3,16 @@
 import React, { useEffect } from 'react';
 import { Transformer } from 'react-konva';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
+import { shallow } from 'zustand/shallow';
 
 export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObject<any>; trRef: React.RefObject<any> }) {
-  const { selectedIds, editingLayerId } = useEditorStore((s) => ({
-    selectedIds: s.selectedIds,
-    editingLayerId: s.editingLayerId,
-  }));
+  const { selectedIds, editingLayerId } = useEditorStore(
+    (s) => ({
+      selectedIds: s.selectedIds,
+      editingLayerId: s.editingLayerId,
+    }),
+    shallow,
+  );
 
   useEffect(() => {
     const stage = stageRef.current;

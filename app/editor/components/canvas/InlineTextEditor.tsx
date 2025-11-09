@@ -2,9 +2,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 import { TextLayer } from '@/canvas/store/useEditorStore';
+import { shallow } from 'zustand/shallow';
 
 export function InlineTextEditor() {
-  const { editingLayerId, layers, updateLayer, setEditingLayerId, scale, stagePos } = useEditorStore();
+  const { editingLayerId, layers, updateLayer, setEditingLayerId, scale, stagePos } = useEditorStore(
+    (s) => ({
+      editingLayerId: s.editingLayerId,
+      layers: s.layers,
+      updateLayer: s.updateLayer,
+      setEditingLayerId: s.setEditingLayerId,
+      scale: s.scale,
+      stagePos: s.stagePos,
+    }),
+    shallow,
+  );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const layer = layers.find((l) => l.id === editingLayerId) as TextLayer | undefined;

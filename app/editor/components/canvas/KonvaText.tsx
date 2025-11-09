@@ -4,6 +4,7 @@ import React from 'react';
 import { Label as KLabel, Tag as KTag, Text as KText } from 'react-konva';
 import { useEditorStore, TextLayer } from '@/canvas/store/useEditorStore';
 import { KonvaEventObject } from 'konva/lib/Node';
+import { shallow } from 'zustand/shallow';
 
 export function KonvaText({
   layer,
@@ -14,7 +15,17 @@ export function KonvaText({
   onDragStart: (e: KonvaEventObject<DragEvent>) => void;
   onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
 }) {
-  const { editingLayerId, setEditingLayerId, selectedIds, addToSelection, removeFromSelection, setSelecteds } = useEditorStore();
+  const { editingLayerId, setEditingLayerId, selectedIds, addToSelection, removeFromSelection, setSelecteds } = useEditorStore(
+    (s) => ({
+      editingLayerId: s.editingLayerId,
+      setEditingLayerId: s.setEditingLayerId,
+      selectedIds: s.selectedIds,
+      addToSelection: s.addToSelection,
+      removeFromSelection: s.removeFromSelection,
+      setSelecteds: s.setSelecteds,
+    }),
+    shallow,
+  );
 
   const isEditing = layer.id === editingLayerId;
 
