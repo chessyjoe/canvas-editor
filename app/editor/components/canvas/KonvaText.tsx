@@ -46,8 +46,7 @@ export function KonvaText({
       onClick={handleClick}
       onDblClick={() => setEditingLayerId(layer.id)}
       onDblTap={() => setEditingLayerId(layer.id)}
-      listening={!isEditing}
-      opacity={isEditing ? 0.5 : layer.locked ? 0.5 : 1}
+      visible={!isEditing}
     >
       <KTag fill={layer.textBackgroundColor} />
       <KText

@@ -5,7 +5,10 @@ import { Transformer } from 'react-konva';
 import { useEditorStore } from '@/canvas/store/useEditorStore';
 
 export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObject<any>; trRef: React.RefObject<any> }) {
-  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const { selectedIds, editingLayerId } = useEditorStore((s) => ({
+    selectedIds: s.selectedIds,
+    editingLayerId: s.editingLayerId,
+  }));
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -41,5 +44,5 @@ export function TransformerManager({ stageRef, trRef }: { stageRef: React.RefObj
     node.scaleY(1);
   };
 
-  return <Transformer ref={trRef} onTransformEnd={onTransformEnd} />;
+  return <Transformer ref={trRef} onTransformEnd={onTransformEnd} visible={!editingLayerId} />;
 }
